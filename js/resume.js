@@ -768,6 +768,9 @@
     const dx = event.changedTouches[0].clientX - touchX;
     const dy = event.changedTouches[0].clientY - touchY;
     touchX = null;
+    // A swipe changes channel on a set that is already on; it doesn't switch one on. (Browsers
+    // wouldn't let it play the sound to go with it either: a swipe is not a gesture they accept.)
+    if (!power.checked) return;
     // Up for the next channel, down for the previous one.
     if (Math.abs(dy) > 50 && Math.abs(dy) > Math.abs(dx) * 1.5) tune(current + (dy < 0 ? 1 : -1));
   });

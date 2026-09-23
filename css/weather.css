@@ -3129,15 +3129,16 @@ label.key {
 
   /* keys big enough to hit with a thumb, on a panel tall enough to hold them */
   .tv-panel {
-    gap: 10px;
-    height: 76px;
-    padding: 0 12px;
+    justify-content: center;
+    gap: 14px;
+    height: 98px;
+    padding: 0 10px;
   }
 
+  /* keys this size leave the speaker grilles a vestige, so the panel does without them */
   .tv-panel::before,
   .tv-panel::after {
-    height: 44px;
-    background-size: 7px 7px;
+    display: none;
   }
 
   .tv-jacks {
@@ -3145,28 +3146,34 @@ label.key {
   }
 
   .tv-ir {
-    width: 13px;
-    height: 13px;
+    width: 15px;
+    height: 15px;
   }
 
   .tv-controls {
-    gap: 7px;
+    gap: 8px;
   }
 
   .tv-keys {
-    gap: 10px;
+    gap: 12px;
   }
 
   .tv-key {
-    width: 48px;
-    height: 30px;
-    border-radius: 5px;
+    width: 66px;
+    height: 42px;
+    border-radius: 6px;
   }
 
   .tv-key-labels {
-    grid-template-columns: 48px 106px 106px;
-    gap: 10px;
-    font-size: 12px;
+    grid-template-columns: 66px 144px 144px;
+    gap: 12px;
+    font-size: 14px;
+  }
+
+  /* and a hit area wider still than the key */
+  label.tv-key::after,
+  button.tv-key::after {
+    inset: -12px -6px;
   }
 
   /* with the remote gone there is room to spare, so the set sits in the middle of the window */
