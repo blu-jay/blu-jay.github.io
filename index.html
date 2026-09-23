@@ -6,423 +6,566 @@
 	<link rel="icon" type="image/png" href="favicon.png" />
 	<meta charset="utf-8">
 	<title>Brody Chapellaz | Software Development Lead</title>
-	<meta http-equiv="X-UA-Compatible" content="IE=Edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="keywords" content="">
-	<meta name="description" content="">
-	<!-- stylesheet css -->
-	<link rel="stylesheet" href="css/bootstrap.min.css">
-	<link rel="stylesheet" href="css/font-awesome.min.css">
-	<link rel="stylesheet" href="css/templatemo-blue.css">
+	<meta name="description"
+		content="Resume of Brody Chapellaz, Software Development Lead and full-stack developer working with ASP.NET, Angular, and Azure.">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fragment+Mono&family=Oswald:wght@400;600;700&display=swap">
+	<link rel="stylesheet" href="css/weather.css">
 </head>
 
-<body data-spy="scroll" data-target=".navbar-collapse">
+<body>
+	<main class="tv">
+		<input type="checkbox" id="switch" class="switch" autocomplete="off" aria-label="Power">
 
-	<!-- preloader section -->
-	<div class="preloader">
-		<div class="sk-spinner sk-spinner-wordpress">
-			<span class="sk-inner-circle"></span>
-		</div>
-	</div>
-
-	<!-- header section -->
-	<header>
-		<div class="container">
-			<div class="row">
-				<div class="col-md-12 col-sm-12">
-					<img src="images/pfp.png"  style="width: 300px;" class="img-responsive img-circle tm-border"
-						alt="profile picture">
-					<hr>
-					<h1 class="tm-title bold shadow">Brody Chapellaz</h1>
-					<h1 class="white bold shadow">Software Development Lead</h1>
-				</div>
+		<div class="remote" role="group" aria-label="Remote control">
+			<!-- the remote's transmitter light: flickers while a key is held -->
+			<span class="remote-led" aria-hidden="true"></span>
+			<div class="remote-keys">
+				<label for="switch" class="key key-power" aria-hidden="true">
+					<svg viewBox="0 0 24 24"><path d="M12 3v8M6.3 6.8a8 8 0 1 0 11.4 0" /></svg>
+				</label>
+				<button type="button" class="key key-small" id="mute" aria-label="Mute">
+					<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3zM16 9l5 6M21 9l-5 6" /></svg>
+				</button>
+				<button type="button" class="key key-small key-guide" id="guide-key">GUIDE</button>
+				<button type="button" class="key key-big" id="volume-up" aria-label="Volume up">+</button>
+				<button type="button" class="key key-big" id="channel-up" aria-label="Next page">
+					<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15l7-7 7 7" /></svg>
+				</button>
+				<span class="remote-wedge" aria-hidden="true"></span>
+				<span class="remote-ch" aria-hidden="true">CH</span>
+				<button type="button" class="key key-big" id="volume-down" aria-label="Volume down">−</button>
+				<button type="button" class="key key-big" id="channel-down" aria-label="Previous page">
+					<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7" /></svg>
+				</button>
+			</div>
+			<!-- Two-digit entry, like a real remote: 0 waits briefly for a second digit (0 then 5 is
+			     channel 05); 0 alone is the guide. 1–8 tune at once; 9 has no channel. -->
+			<div class="remote-pad">
+				<button type="button" class="key" data-digit="1">1</button>
+				<button type="button" class="key" data-digit="2">2</button>
+				<button type="button" class="key" data-digit="3">3</button>
+				<button type="button" class="key" data-digit="4">4</button>
+				<button type="button" class="key" data-digit="5">5</button>
+				<button type="button" class="key" data-digit="6">6</button>
+				<button type="button" class="key" data-digit="7">7</button>
+				<button type="button" class="key" data-digit="8">8</button>
+				<button type="button" class="key" data-digit="9">9</button>
+				<button type="button" class="key key-tiny" id="info-key" aria-label="Info: show how to use the remote">INFO</button>
+				<button type="button" class="key" data-digit="0">0</button>
+				<button type="button" class="key key-tiny" id="back-key" aria-label="Back to the previous channel">BACK</button>
 			</div>
 		</div>
-	</header>
 
-	<section class="container">
-		<div class="row">
-			<div class="col-md-8 col-sm-12 aboutPanel">
-				<div class="about">
-					<h3>Hi, I’m Brody,</h3>
-					<p>
-						I'm a full-stack developer and software team lead with a passion for building reliable, scalable
-						web applications. I have led small development teams, automated CI/CD pipelines, and built
-						integrations with numerous platforms.
-						<br>
-						<br>
-						I enjoy learning new technologies and am very familiar with ASP.NET backend development,
-						Angular frontend development, and Azure cloud hosting.
+		<!-- The set: bezel, tube and front panel, modelled on a 1990s portable CRT. -->
+		<div class="tv-set">
+			<div class="tv-tube">
+			<div class="screen scanlines">
+			<!-- On-screen display: channel number or volume, shown briefly after a change. -->
+			<div class="osd" aria-live="polite">CH 01</div>
+			<!-- Now-playing marquee, shown when the track changes. -->
+			<div class="marquee" aria-hidden="true"><span class="marquee-text"></span></div>
+			<!-- Curved glass over the tube: edge shading, vignette, rim light and glare. Each outline
+			     matches whichever shape the screen is clipped to: #crtPath here, #setShape on phones
+			     (its path is in fractions of the box, hence the scale to the viewBox). -->
+			<div class="glass" aria-hidden="true">
+				<svg class="glass-edge" viewBox="0 0 93.88 76.19" preserveAspectRatio="none">
+					<path class="shape-crt" d="M47.78.5c11.65,0,38,.92,41.81,4,3.59,3,3.79,22.28,3.79,34.19,0,11.67-.08,27.79-3.53,31.24S60.3,75.69,47.78,75.69c-11.2,0-39.89-1.16-44-5.27S.57,52.42.57,38.73.31,8.56,4,4.88,34.77.5,47.78.5Z" />
+					<path class="shape-flat" transform="scale(93.88 76.19)"
+						d="M.0459.0204C.2725-.0068.7275-.0068.9541.0204A.0249.0294 0 0 1 .979.0498C1.007.2749 1.007.7251.979.9502A.0249.0294 0 0 1 .9541.9796C.7275 1.0068.2725 1.0068.0459.9796A.0249.0294 0 0 1 .021.9502C-.007.7251-.007.2749.021.0498A.0249.0294 0 0 1 .0459.0204Z" />
+				</svg>
+				<svg class="glass-rim" viewBox="0 0 93.88 76.19" preserveAspectRatio="none">
+					<path class="shape-crt" d="M47.78.5c11.65,0,38,.92,41.81,4,3.59,3,3.79,22.28,3.79,34.19,0,11.67-.08,27.79-3.53,31.24S60.3,75.69,47.78,75.69c-11.2,0-39.89-1.16-44-5.27S.57,52.42.57,38.73.31,8.56,4,4.88,34.77.5,47.78.5Z" />
+					<path class="shape-flat" transform="scale(93.88 76.19)"
+						d="M.0459.0204C.2725-.0068.7275-.0068.9541.0204A.0249.0294 0 0 1 .979.0498C1.007.2749 1.007.7251.979.9502A.0249.0294 0 0 1 .9541.9796C.7275 1.0068.2725 1.0068.0459.9796A.0249.0294 0 0 1 .021.9502C-.007.7251-.007.2749.021.0498A.0249.0294 0 0 1 .0459.0204Z" />
+				</svg>
+			</div>
+			<!-- Static shown briefly while changing channels. -->
+			<canvas class="snow" width="320" height="240" aria-hidden="true"></canvas>
+			<div class="contents">
+				<!-- Logo and clock shared by the WeatherSTAR channels; a full-screen layer so the
+				     curved-glass filter lines up with the pages. -->
+				<div class="chrome" aria-hidden="true">
+					<div class="logo">
+						<span>The</span><span>Brody</span><span>Channel</span>
+					</div>
+					<div class="clock">
+						<span id="clock-time">11:28:27 PM</span>
+						<span id="clock-date">SUN JUN 27</span>
+					</div>
+				</div>
+
+				<!-- 00: program guide. Hovering or focusing a listing fills the info panel and preview
+				     from its data-* attributes; clicking tunes to data-channel. -->
+				<section class="page epg" data-slug="guide" data-own-chrome aria-label="Program guide">
+					<div class="epg-top">
+						<div class="epg-left">
+							<div class="epg-bar">
+								<a class="epg-mail" href="mailto:brody@chapellaz.com" aria-label="Email Brody">
+									<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3zM3 6l9 7 9-7" /></svg>
+								</a>
+								<span class="epg-time" id="epg-time">2:52pm</span>
+								<span class="epg-badge" aria-hidden="true"><span>TV</span><span>Guide</span></span>
+							</div>
+							<div class="epg-info">
+								<div class="epg-info-head">
+									<span class="epg-info-title">Contact Me</span>
+									<span class="epg-info-ch">01 CTC</span>
+								</div>
+								<div class="epg-info-time"></div>
+								<p class="epg-info-desc"></p>
+							</div>
+						</div>
+						<div class="epg-preview" aria-hidden="true" inert></div>
+					</div>
+					<div class="epg-times" aria-hidden="true">
+						<span>Today ◂</span><span class="epg-slot">3:30pm</span><span class="epg-slot">4:00pm</span><span class="epg-slot">4:30pm ▸</span>
+					</div>
+					<div class="epg-grid">
+						<div class="epg-row">
+							<span class="epg-ch"><b>01</b><span class="epg-call">CTC</span></span>
+							<button type="button" class="epg-cell span-3" data-channel="1" data-call="CTC" data-title="Contact Me" data-time=""
+								data-desc="Phone, email and LinkedIn for Brody Chapellaz, Software Development Lead.">Contact Me</button>
+						</div>
+						<div class="epg-row">
+							<span class="epg-ch"><b>02</b><span class="epg-call">ABT</span></span>
+							<button type="button" class="epg-cell span-3" data-channel="2" data-call="ABT" data-title="About Me" data-time="Full-stack developer"
+								data-desc="Learn more about me and how I like taking on new challenges.">About Me</button>
+						</div>
+						<div class="epg-row">
+							<span class="epg-ch"><b>03</b><span class="epg-call">NWS</span></span>
+							<button type="button" class="epg-cell span-2" data-channel="3" data-call="NWS" data-title="Software Development Lead" data-time="DesignSpec · 2023 – Present"
+								data-desc="Led a small dev team, automated CI/CD pipelines with Azure DevOps, and cut cloud costs by over $10,000/year.">Software Development Lead @ DesignSpec</button>
+							<button type="button" class="epg-cell" data-channel="3" data-call="NWS" data-title="Software Development Lead" data-time="DesignSpec · 2023 – Present"
+								data-desc="Led a small dev team, automated CI/CD pipelines with Azure DevOps, and cut cloud costs by over $10,000/year.">2023–Present</button>
+						</div>
+						<div class="epg-row">
+							<span class="epg-ch"><b>04</b><span class="epg-call">ADS</span></span>
+							<button type="button" class="epg-cell span-2" data-channel="4" data-call="ADS" data-title="Software Developer" data-time="DesignSpec · 2021 – 2023"
+								data-desc="Helped build the core B2B SaaS platform, added Stripe billing, and a Chrome extension used by 2,000+ designers.">Software Developer @ DesignSpec</button>
+							<button type="button" class="epg-cell" data-channel="4" data-call="ADS" data-title="Software Developer" data-time="DesignSpec · 2021 – 2023"
+								data-desc="Helped build the core B2B SaaS platform, added Stripe billing, and a Chrome extension used by 2,000+ designers.">2021–2023</button>
+						</div>
+						<div class="epg-row">
+							<span class="epg-ch"><b>05</b><span class="epg-call">PZL</span></span>
+							<button type="button" class="epg-cell span-2" data-channel="5" data-call="PZL" data-title="Software Developer DevOps Intern" data-time="Varian Medical Systems · 2019 – 2020"
+								data-desc="Built internal tools for installation diagnostics and web-based reporting with C#, ASP.NET and SQL Server.">DevOps Intern @ Varian Medical Systems</button>
+							<button type="button" class="epg-cell" data-channel="5" data-call="PZL" data-title="Software Developer DevOps Intern" data-time="Varian Medical Systems · 2019 – 2020"
+								data-desc="Built internal tools for installation diagnostics and web-based reporting with C#, ASP.NET and SQL Server.">2019–2020</button>
+						</div>
+						<div class="epg-row">
+							<span class="epg-ch"><b>06</b><span class="epg-call">EDU</span></span>
+							<button type="button" class="epg-cell" data-channel="6" data-call="EDU" data-title="Red River College" data-time="Business Information Technology (BIT)"
+								data-desc="Focus: App Development, Databases, Web, and Mobile Solutions.">Red River College</button>
+							<button type="button" class="epg-cell span-2" data-channel="6" data-call="EDU" data-title="Red River College" data-time="Business Information Technology (BIT)"
+								data-desc="Focus: App Development, Databases, Web, and Mobile Solutions.">Business Information Technology</button>
+						</div>
+						<div class="epg-row">
+							<span class="epg-ch"><b>07</b><span class="epg-call">TEC</span></span>
+							<button type="button" class="epg-cell" data-channel="7" data-call="TEC" data-title=".NET / C#" data-time="6 Years"
+								data-desc="Six years of backend development in C# and .NET.">.NET / C#</button>
+							<button type="button" class="epg-cell" data-channel="7" data-call="TEC" data-title="Angular &amp; AngularJS" data-time="5 Years"
+								data-desc="Five years of frontend development in Angular and AngularJS.">Angular</button>
+							<button type="button" class="epg-cell" data-channel="7" data-call="TEC" data-title="SQL / Relational Databases" data-time="6 Years"
+								data-desc="Six years of SQL and relational database work, including SQL Server.">SQL</button>
+						</div>
+						<div class="epg-row">
+							<span class="epg-ch"><b>08</b><span class="epg-call">TRV</span></span>
+							<button type="button" class="epg-cell span-3" data-channel="8" data-call="TRV" data-title="Tools and Integrations" data-time="Trivia board"
+								data-desc="A trivia board of 25 tools and services Brody works with, from Git and Visual Studio to Stripe and Azure.">Tools and Integrations</button>
+						</div>
+					</div>
+					<!-- the whole banner is the link; the button is part of it, not a second target -->
+					<a class="epg-ad" href="mailto:brody@chapellaz.com">
+						<span class="epg-ad-icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24"><path d="M3 6h18v12H3zM3 6l9 7 9-7" /></svg>
+						</span>
+						<span class="epg-ad-text">Looking for a Software Developer? <b>Get in touch.</b></span>
+						<span class="epg-ad-button">Email Brody ›</span>
+					</a>
+				</section>
+
+				<!-- 01: profile + contact -->
+				<section class="page active" data-slug="contact">
+					<div class="band"></div>
+					<div class="head">
+						<h2 class="title">Current<br>Conditions</h2>
+					</div>
+					<div class="infobox">
+						<div class="box conditions">
+							<div class="conditions-left">
+								<img src="images/pfp.png" class="photo" alt="Brody Chapellaz">
+								<p class="condition">Software<br>Development Lead</p>
+							</div>
+							<div class="conditions-right">
+								<div class="sq">
+									<h1 class="lead">Brody Chapellaz</h1>
+									<dl>
+										<div class="row">
+											<dt>Phone:</dt>
+											<dd><a href="tel:+12045571610">+1 (204) 557-1610</a></dd>
+										</div>
+										<div class="row">
+											<dt>Email:</dt>
+											<dd><a href="mailto:brody@chapellaz.com">brody@chapellaz.com</a></dd>
+										</div>
+										<div class="row">
+											<dt>LinkedIn:</dt>
+											<dd><a href="https://www.linkedin.com/in/brodychapellaz/">brodychapellaz</a></dd>
+										</div>
+									</dl>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="foot">
+						<p>Conditions at Winnipeg</p>
+					</div>
+				</section>
+
+				<!-- 02: about, styled after a VHS copyright-warning screen. It uses its own letters and
+				     seal rather than a real agency's name or insignia. -->
+				<section class="page warning" data-slug="aboutme" data-own-chrome aria-labelledby="about-title">
+					<div class="warning-panel">
+						<div class="warning-side" aria-hidden="true">
+							<span class="warning-letters">DEV</span>
+							<svg class="warning-seal" viewBox="0 0 200 200">
+								<path id="warning-seal-ring" d="M100 100m-76 0a76 76 0 1 1 152 0a76 76 0 1 1-152 0" fill="none" />
+								<circle cx="100" cy="100" r="97" fill="none" stroke="currentColor" stroke-width="5" />
+								<circle cx="100" cy="100" r="89" fill="none" stroke="currentColor" stroke-width="1.5" />
+								<circle cx="100" cy="100" r="60" fill="none" stroke="currentColor" stroke-width="3" />
+								<text font-family="Oswald, Arial Narrow, sans-serif" font-size="15" font-weight="700" fill="currentColor">
+									<textPath href="#warning-seal-ring" textLength="470" lengthAdjust="spacing">SOFTWARE DEVELOPMENT ★ THE BRODY CHANNEL ★</textPath>
+								</text>
+								<g font-size="11" fill="currentColor" text-anchor="middle">
+									<text x="146" y="104">★</text><text x="132.5" y="136.5">★</text><text x="100" y="150">★</text><text x="67.5" y="136.5">★</text>
+									<text x="54" y="104">★</text><text x="67.5" y="71.5">★</text><text x="100" y="58">★</text><text x="132.5" y="71.5">★</text>
+								</g>
+								<text x="100" y="113" font-family="Georgia, serif" font-size="36" font-weight="700" fill="currentColor" text-anchor="middle">BC</text>
+							</svg>
+						</div>
+						<div class="warning-box">
+							<h2 class="warning-title" id="about-title"><span class="sr-only">About me: </span>Warning</h2>
+							<p>
+								Hi, I’m Brody. I’m a full-stack developer who enjoys building all kinds of web
+								applications. I’ve led development teams, automated CI/CD pipelines, and built
+								integrations with a wide range of platforms and services.
+							</p>
+							<p>
+								I like tackling challenging problems, picking up new skills, and turning ideas into
+								software.
+							</p>
+						</div>
+					</div>
+				</section>
+
+				<!-- 03-05: work experience -->
+
+				<!-- 03: DesignSpec 2023 – Present, as a breaking-news broadcast over a DesignSpec image.
+				     js/resume.js copies the ticker list so it loops seamlessly, and sets its speed. -->
+				<section class="page news" data-slug="designspec" data-own-chrome aria-labelledby="news-title">
+					<span class="news-live" aria-hidden="true">Live</span>
+					<a class="news-logo" href="https://designspec.com/">
+						<img src="images/designspec-logo.png" alt="DesignSpec" width="750" height="111">
+					</a>
+					<div class="news-lower">
+						<div class="news-flags">
+							<span class="news-flag" aria-hidden="true">Breaking News</span>
+							<span class="news-tag">Current Position</span>
+						</div>
+						<div class="news-headline">
+							<h2 id="news-title">Software Development Lead</h2>
+							<p>2023 – Present</p>
+						</div>
+						<div class="news-ticker">
+							<span class="news-time" aria-hidden="true">9:42</span>
+							<div class="news-ticker-view">
+								<div class="news-ticker-track">
+									<ul class="news-ticker-text">
+										<li>Leads a small dev team</li>
+										<li>Helps hire and review developers</li>
+										<li>CI/CD automated with Azure DevOps</li>
+										<li>Cloud costs cut by $10K+ a year</li>
+										<li>Integrations: Stripe, QuickBooks, Slack, Shopify, Revit</li>
+										<li><a href="https://designspec.com/ds-collection/">DS Collection</a> launched: thousands of products, a dozen+ brands</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+				</section>
+
+				<!-- 04: DesignSpec 2021 – 2023, as a late-night TV commercial. -->
+				<section class="page promo" data-slug="designspec2" data-own-chrome aria-labelledby="promo-title">
+					<div class="promo-top">
+						<figure class="promo-shot">
+							<a href="https://designspec.com/">
+								<img src="images/designspec-specbook.jpg" alt="A DesignSpec specbook page for a lounge chair">
+								<figcaption>I helped build this B2B SaaS platform</figcaption>
+							</a>
+						</figure>
+						<div class="promo-offer">
+							<ul class="promo-cards" aria-label="Built with">
+								<li class="card-angular">Angular</li>
+								<li class="card-aspnet">ASP.NET</li>
+								<li class="card-sql">SQL Server</li>
+								<li class="card-react">React</li>
+							</ul>
+							<a class="promo-deal" href="https://chromewebstore.google.com/detail/designspec-web-clipper/lgbplgjemdkhdcpghphggeflnhnbbjba">
+								<span class="promo-deal-lead">Built a Chrome extension used by</span>
+								<span class="promo-deal-big">2,000<sup>+</sup></span>
+								<span class="promo-deal-small">interior designers</span>
+							</a>
+							<p class="promo-guarantee">Also Implemented Stripe Subscription Billing</p>
+						</div>
+					</div>
+					<a class="promo-url" href="https://designspec.com/">www.designspec.com</a>
+					<h2 class="promo-job" id="promo-title">Software Developer</h2>
+					<p class="promo-years">2021 – 2023</p>
+					<p class="promo-fine"><span>DesignSpec</span><span>Code reviews · Planning · Data Migrations · and more!</span></p>
+				</section>
+
+				<!-- 05: Varian 2019 – 2020, as a word-puzzle game board. js/resume.js builds the board from
+				     data-lines (one puzzle line per board row, "|"-separated); clicking a white tile reveals
+				     every tile with that letter. The ticker reuses channel 03's ticker. -->
+				<section class="page wof" data-slug="varian" data-own-chrome aria-labelledby="wof-title">
+					<h2 class="sr-only" id="wof-title">Software Developer DevOps Intern, Varian Medical Systems, 2019 – 2020</h2>
+					<div class="wof-frame">
+						<div class="wof-inner">
+							<div class="wof-tiles" role="group" aria-label="Puzzle board: click a tile to reveal its letter"
+								data-lines="|DEVOPS|INTERN|"></div>
+						</div>
+						<p class="play-hint" role="note"><strong><span class="say-click">Click</span><span class="say-tap">Tap</span> a tile</strong> to reveal its letter</p>
+					</div>
+					<span class="wof-category">Occupation</span>
+					<p class="wof-company">
+						<a href="https://www.varian.com/"><img src="images/varian-logo.png" alt="Varian, a Siemens Healthineers company" width="700" height="222"></a>
+						<span>2019 – 2020</span>
 					</p>
-				</div>
-			</div>
-			<div class="col-md-4 col-sm-12 contactPanel">
-				<div class="contact">
-					<h2>Contact</h2>
-					<div class="contactLinks">
-						<p><i class="fa fa-phone"></i> +1 (204) 557-1610</p>
-						<p><i class="fa fa-envelope"></i> <a href="mailto:brody@chapellaz.com">brody@chapellaz.com</a>
+					<div class="news-ticker wof-ticker">
+						<div class="news-ticker-view">
+							<div class="news-ticker-track">
+								<ul class="news-ticker-text">
+									<li>Built internal tools for software installation diagnostics</li>
+									<li>Web-based reporting in C#, ASP.NET and SQL Server</li>
+									<li>Delivered tools used globally with cross-functional teams</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</section>
+
+				<!-- 06: education, styled after a 1990s Weather Channel "outlook" title screen: striped
+				     title bars, a slanted photo panel, and a striped bar along the bottom. -->
+				<section class="page outlook" data-slug="redrivercollege" data-own-chrome aria-labelledby="edu-title">
+					<div class="logo" aria-hidden="true">
+						<span>The</span><span>Brody</span><span>Channel</span>
+					</div>
+					<div class="outlook-title">
+						<p class="outlook-kicker">Red River College</p>
+						<h2 class="outlook-big" id="edu-title">Education</h2>
+					</div>
+					<div class="outlook-photo">
+						<div role="img" aria-label="Red River College's Exchange District Campus"></div>
+					</div>
+					<div class="outlook-bar">
+						<p class="outlook-program">
+							<a href="https://www.rrc.ca">Business Information Technology (BIT)</a>
 						</p>
-						<p><i class="fa fa-globe"></i> <a href="https://brody.chapellaz.com">brody.chapellaz.com</a></p>
-						<p><i class="fa fa-linkedin"></i> <a
-								href="https://www.linkedin.com/in/brodychapellaz/">brodychapellaz</a></p>
+						<p class="outlook-focus">Focus: App Development · Databases · Web · Mobile Solutions</p>
 					</div>
-				</div>
+				</section>
+
+				<!-- 08: technologies -->
+				<section class="page" data-slug="technologies">
+					<div class="band"></div>
+					<div class="head">
+						<h2 class="title">Technologies</h2>
+					</div>
+					<div class="infobox">
+						<div class="box">
+							<div class="sq">
+								<ul class="bars">
+									<li>
+										<div class="bar-label"><span>XML / HTML / CSS</span><span>7 Years</span></div>
+										<div class="bar" aria-hidden="true"><span style="--w: 100%"></span></div>
+									</li>
+									<li>
+										<div class="bar-label"><span>.NET / C#</span><span>6 Years</span></div>
+										<div class="bar" aria-hidden="true"><span style="--w: 95%"></span></div>
+									</li>
+									<li>
+										<div class="bar-label"><span>SQL / Relational Databases</span><span>6 Years</span></div>
+										<div class="bar" aria-hidden="true"><span style="--w: 95%"></span></div>
+									</li>
+									<li>
+										<div class="bar-label"><span>ASP.NET</span><span>5 Years</span></div>
+										<div class="bar" aria-hidden="true"><span style="--w: 85%"></span></div>
+									</li>
+									<li>
+										<div class="bar-label"><span>Angular &amp; AngularJS</span><span>5 Years</span></div>
+										<div class="bar" aria-hidden="true"><span style="--w: 85%"></span></div>
+									</li>
+									<li>
+										<div class="bar-label"><span>Java / Android Development</span><span>2 Years</span></div>
+										<div class="bar" aria-hidden="true"><span style="--w: 30%"></span></div>
+									</li>
+									<li>
+										<div class="bar-label"><span>React</span><span>2 Years</span></div>
+										<div class="bar" aria-hidden="true"><span style="--w: 30%"></span></div>
+									</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+					<div class="foot">
+						<p>Years of experience</p>
+					</div>
+				</section>
+
+				<!-- 08: quiz-show board. js/resume.js builds the board from these lists: one list per
+				     category (in order, one column each), one item per clue, valued by position from
+				     data-values (one row per value; cells without a clue are left blank). The item text
+				     is the answer ("What is …?"); data-clue is what the card shows. Every clue ties back
+				     to the resume. -->
+				<section class="page quiz" data-slug="tools" data-own-chrome aria-labelledby="quiz-title">
+					<h2 class="quiz-round" id="quiz-title">Tools and Integrations</h2>
+					<div class="quiz-stage">
+						<span class="quiz-pillar" aria-hidden="true"></span>
+						<div class="quiz-board" data-values="200 400 600 800 1000">
+							<p class="play-hint" role="note"><strong>Pick a clue!</strong><br><span class="say-click">Click any dollar value to play.</span><span class="say-tap">Tap a value.</span></p>
+							<ul class="quiz-category" data-title="Ship It">
+								<li data-clue="Brody has experience with this version control system, created by Linus Torvalds in 2005">Git</li>
+								<li data-clue="Brody automated CI/CD pipelines with this Microsoft service">Azure DevOps</li>
+								<li data-clue="Brody has hosted code on this Atlassian Git service, named for a place to keep your bits">Bitbucket</li>
+								<li data-clue="Brody has run builds on this JetBrains server, whose name sounds like a whole town of teammates">TeamCity</li>
+								<li data-clue="Brody has used this Microsoft server, known by 3 letters">Team Foundation Server</li>
+							</ul>
+							<ul class="quiz-category" data-title="Dev Toolbox">
+								<li data-clue="Brody builds his .NET and C# applications in this flagship Microsoft IDE">Visual Studio</li>
+								<li data-clue="Brody has experience with this free, lightweight Microsoft code editor, first released in 2015">VS Code</li>
+								<li data-clue="Brody pairs his 6 years of SQL experience with this Microsoft app, often shortened to SSMS">SQL Server Management Studio</li>
+								<li data-clue="Brody has tested APIs with this app, named for a mail carrier">Postman</li>
+								<li data-clue="Brody has used this JetBrains IDE, the one Android Studio is built on">IntelliJ IDEA</li>
+							</ul>
+							<ul class="quiz-category" data-title="Keep in Touch">
+								<li data-clue="Brody developed an integration with this chat app, whose name reportedly stands for 'Searchable Log of All Conversation and Knowledge'">Slack</li>
+								<li data-clue="Brody has integrated this chat app, launched for gamers in 2015, that organizes communities into servers">Discord</li>
+								<li data-clue="Brody has integrated with the CRM from this company, which popularized the term 'inbound marketing'">HubSpot</li>
+								<li data-clue="Brody has integrated this Twilio-owned service for sending transactional and marketing email">SendGrid</li>
+								<li data-clue="Brody has integrated this platform that turns a recorded video into an automated, on-demand webinar">eWebinar</li>
+							</ul>
+							<ul class="quiz-category" data-title="Cloud &amp; Creative">
+								<li data-clue="Brody has experience with this browser-based design tool, where a whole team can edit the same screen at once">Figma</li>
+								<li data-clue="Brody has integrated this Microsoft cloud service for building apps on OpenAI's GPT models">Azure OpenAI</li>
+								<li data-clue="Brody developed an integration with this Autodesk software for designing buildings">Autodesk Revit</li>
+								<li data-clue="Brody has used this free Microsoft app to browse blobs, queues and tables in Azure">Azure Storage Explorer</li>
+							</ul>
+							<ul class="quiz-category" data-title="Show Me the Money">
+								<li data-clue="Brody implemented subscription billing with this payment platform">Stripe</li>
+								<li data-clue="Brody developed an integration with this e-commerce platform, founded in Ottawa">Shopify</li>
+								<li data-clue="Brody developed an integration with this Intuit accounting software">QuickBooks</li>
+							</ul>
+							<ul class="quiz-category" data-title="By the Numbers">
+								<li data-clue="Brody has integrated this web-analytics service, whose fourth version, GA4, replaced Universal Analytics in 2023">Google Analytics</li>
+								<li data-clue="Brody has integrated this event-based analytics platform, known for its funnel and retention reports">Mixpanel</li>
+								<li data-clue="Brody has integrated this product-analytics tool that automatically captures every click, tap and page view">Heap</li>
+							</ul>
+						</div>
+						<span class="quiz-pillar" aria-hidden="true"></span>
+					</div>
+				</section>
 			</div>
 		</div>
-	</section>
-
-	<section class="container">
-		<div class="row">
-			<div class="education">
-				<h2 class="white">Work Experience</h2>
-				<div class="education-content">
-					<h4 class="education-title accent">Software Development Lead</h4>
-					<div class="education-school">
-						<h5><a href="https://designspec.com/" class="headerLink">DesignSpec <i class="fa fa-link" style="opacity: 0.6;"></i></a></h5><span></span>
-						<h5>2023 – Present</h5>
-					</div>
-					<p class="education-description">
-					<ul class="workDescriptionList">
-						<li>
-							Led a small dev team, aligning roadmap goals with delivery and technical direction
-						</li>
-						<li>
-							Interviewed new developers and participated in performance reviews to support team growth
-						</li>
-						<li>
-							Automated CI/CD pipelines with Azure DevOps, improving release speed and reliability
-						</li>
-						<li>
-							Reduced cloud infrastructure costs by over $10,000/year through database optimization
-						</li>
-						<li>
-							Developed integrations with Stripe, QuickBooks, Slack, Shopify, and Autodesk Revit
-						</li>
-						<li>
-							Oversaw the creation and launch of a product discovery / ecommerce platform ( <a
-								href="https://designspec.com/ds-collection/" class="inboxLink">DS Collection</a> <i class="fa fa-link" style="opacity: 0.6;"></i> ) <br>
-							which hosts thousands of products from over a dozen brands
-						</li>
-					</ul>
-					</p>
-				</div>
-				<div class="education-content">
-					<h4 class="education-title accent">Software Developer</h4>
-					<div class="education-school">
-						<h5><a href="https://designspec.com/" class="headerLink">DesignSpec <i class="fa fa-link" style="opacity: 0.6;"></i></a></h5><span></span>
-						<h5>2021 – 2023</h5>
-					</div>
-					<p class="education-description">
-					<ul class="workDescriptionList">
-						<li>
-							Helped build the company’s core B2B SaaS platform
-						</li>
-						<li>
-							Developed front-end (Angular) and back-end (ASP.NET, SQL Server) features
-						</li>
-						<li>
-							Created a Chrome extension in React used by 2,000+ interior designers ( <a
-								href="https://chromewebstore.google.com/detail/designspec-web-clipper/lgbplgjemdkhdcpghphggeflnhnbbjba"
-								class="inboxLink">DesignSpec Web Clipper</a> <i class="fa fa-link" style="opacity: 0.6;"></i> )
-						</li>
-						<li>
-							Implemented subscription billing with Stripe, handling financial transactions
-						</li>
-						<li>
-							Participated in code reviews, feature planning, and framework migrations
-						</li>
-					</ul>
-					</p>
-				</div>
-				<div class="education-content">
-					<h4 class="education-title accent">Software Developer DevOps Intern</h4>
-					<div class="education-school">
-						<h5><a href="https://www.varian.com/" class="headerLink">Varian Medical Systems <i class="fa fa-link" style="opacity: 0.6;"></i></a></h5><span></span>
-						<h5>2019 – 2020</h5>
-					</div>
-					<p class="education-description">
-					<ul class="workDescriptionList">
-						<li>
-							Built internal tools to improve software installation diagnostics
-						</li>
-						<li>
-							Developed web-based reporting features using C#, ASP.NET, and SQL Server
-						</li>
-						<li>
-							Collaborated with cross-functional teams to deliver tools used globally
-						</li>
-					</ul>
-					</p>
-				</div>
+			</div>
+			<!-- Front panel: the power button, volume and channel keys (they do the same as the
+			     remote's), the remote sensor and the AV jacks. -->
+			<div class="tv-panel">
+				<span class="tv-ir" aria-hidden="true"></span>
+				<span class="tv-controls">
+					<span class="tv-keys">
+						<label for="switch" class="tv-key tv-power"></label>
+						<button type="button" class="tv-key" data-set-key="volume-down" aria-label="Volume down"></button>
+						<button type="button" class="tv-key" data-set-key="volume-up" aria-label="Volume up"></button>
+						<button type="button" class="tv-key" data-set-key="channel-down" aria-label="Previous page"></button>
+						<button type="button" class="tv-key" data-set-key="channel-up" aria-label="Next page"></button>
+					</span>
+					<span class="tv-key-labels" aria-hidden="true">
+						<span>Power</span><span>− Vol +</span><span>▼ Ch ▲</span>
+					</span>
+				</span>
+				<span class="tv-jacks" aria-hidden="true">
+					<span class="tv-jack yellow"></span>
+					<span class="tv-jack white"></span>
+				</span>
 			</div>
 		</div>
-	</section>
 
-	<!-- contact and experience -->
-	<section class="container">
-		<div class="row">
-			<div>
-				<div class="experience" style="min-height: 0px;">
-					<h2 class="white">Education</h2>
-					<div class="experience-content">
-						<h4 class="experience-title accent">Red River College</h4>
-						<h5><a href="https://catalogue.rrc.ca/Programs/WPG/Fulltime/BUSGF-DP" class="headerLink">Business Information Technology (BIT) <i class="fa fa-link" style="opacity: 0.6;"></i></a></h5><span></span>
-						<p class="education-description">Focus: App Development, Databases, Web, and Mobile Solutions
-						</p>
-					</div>
-				</div>
-			</div>
+		<!-- Shown until the TV is first turned on. -->
+		<!-- Also reopened by the remote's INFO key, so the first line has an on and an off version. -->
+		<div class="hint" role="note">
+			<p class="hint-desktop">
+				<span class="when-off"><strong>Welcome to my page!</strong> Turn the TV on with the red button.</span>
+				<span class="when-on"><strong>Welcome to my page!</strong> The red button turns the TV off and on.</span>
+			</p>
+			<p class="hint-desktop">Use <strong>CH ▲ ▼</strong> or the number keys to change channels, or <strong>GUIDE</strong> to see them all.</p>
+			<p class="hint-desktop"><strong>BACK</strong> returns to the last channel, and <strong>INFO</strong> shows this again.</p>
+			<p class="hint-desktop">The TV has sound: <strong>+&nbsp;−</strong> and mute adjust it.</p>
+			<p class="hint-phone">
+				<span class="when-off"><strong>Welcome to my page!</strong> The power button below turns the TV on.</span>
+				<span class="when-on"><strong>Welcome to my page!</strong> The power button below turns the TV off and on.</span>
+			</p>
+			<p class="hint-phone">Swipe the picture up and down to change channels, or use <strong>▼&nbsp;CH&nbsp;▲</strong>. Channel 00 is a guide to them all.</p>
+			<p class="hint-phone">The TV has sound: <strong>−&nbsp;VOL&nbsp;+</strong> adjusts it.</p>
+			<p class="hint-phone with-remote">The remote further down the page has the other keys; its <strong>INFO</strong> key shows this again.</p>
 		</div>
-	</section>
 
-	<section class="container" style="margin-top: 30px;">
-		<div class="row">
-			<div class="col-md-6 col-sm-12">
-				<div class="skills">
-					<h2 class="white">Technologies</h2>
-					<div>
-						<strong>XML / HTML / CSS</strong>
-						<span class="pull-right">7 Years</span>
-						<div class="progress">
-							<div class="progress-bar progress-bar-primary" role="progressbar" aria-valuenow="100"
-								aria-valuemin="0" aria-valuemax="100" style="width: 100%;"></div>
-						</div>
-					</div>
-					<div>
-						<strong>.NET / C#</strong>
-						<span class="pull-right">6 Years</span>
-						<div class="progress">
-							<div class="progress-bar progress-bar-primary" role="progressbar" aria-valuenow="100"
-								aria-valuemin="0" aria-valuemax="100" style="width: 95%;"></div>
-						</div>
-					</div>
-					<div>
-						<strong>SQL / Relational Databases</strong>
-						<span class="pull-right">6 Years</span>
-						<div class="progress">
-							<div class="progress-bar progress-bar-primary" role="progressbar" aria-valuenow="100"
-								aria-valuemin="0" aria-valuemax="100" style="width: 95%;"></div>
-						</div>
-					</div>
-					<div>
-						<strong>ASP.NET</strong>
-						<span class="pull-right">5 Years</span>
-						<div class="progress">
-							<div class="progress-bar progress-bar-primary" role="progressbar" aria-valuenow="100"
-								aria-valuemin="0" aria-valuemax="100" style="width: 85%;"></div>
-						</div>
-					</div>
-					<div>
-						<strong>Angular & AngularJS</strong>
-						<span class="pull-right">5 Years</span>
-						<div class="progress">
-							<div class="progress-bar progress-bar-primary" role="progressbar" aria-valuenow="100"
-								aria-valuemin="0" aria-valuemax="100" style="width: 85%;"></div>
-						</div>
-					</div>
-					<div>
-						<strong>Java / Android Development</strong>
-						<span class="pull-right">
-							2 Years</span>
-						<div class="progress">
-							<div class="progress-bar progress-bar-primary" role="progressbar" aria-valuenow="30"
-								aria-valuemin="0" aria-valuemax="100" style="width: 30%;"></div>
-						</div>
-					</div>
-					<div>
-						<strong>React</strong>
-						<span class="pull-right">
-							2 Years</span>
-						<div class="progress">
-							<div class="progress-bar progress-bar-primary" role="progressbar" aria-valuenow="30"
-								aria-valuemin="0" aria-valuemax="100" style="width: 30%;"></div>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="col-md-6 col-sm-12">
-				<div class="skills">
-					<h2 class="white">Tools Used</h2>
-					<ul>
-						<li>
-							<div>
-								<strong>Azure DevOps + Azure Pipelines</strong>
-							</div>
-						</li>
-						<li>
-							<div>
-								<strong>Azure Storage Explorer</strong>
-							</div>
-						</li>
-						<li>
-							<div>
-								<strong>Bitbucket</strong>
-							</div>
-						</li>
-						<li>
-							<div>
-								<strong>Figma</strong>
-							</div>
-						</li>
-						<li>
-							<div>
-								<strong>Git</strong>
-							</div>
-						</li>
-						<li>
-							<div>
-								<strong>IntelliJ IDEA</strong>
-							</div>
-						</li>
-						<li>
-							<div>
-								<strong>Postman</strong>
-							</div>
-						</li>
-						<li>
-							<div>
-								<strong>SQL Server Management Studio</strong>
-							</div>
-						</li>
-						<li>
-							<div>
-								<strong>Team Foundation Server (TFS)</strong>
-							</div>
-						</li>
-						<li>
-							<div>
-								<strong>TeamCity</strong>
-							</div>
-						</li>
-						<li>
-							<div>
-								<strong>VS Code</strong>
-							</div>
-						</li>
-						<li>
-							<div>
-								<strong>Visual Studio</strong>
-							</div>
-						</li>
-					</ul>
-				</div>
-			</div>
-		</div>
-	</section>
+	</main>
 
-	<section class="container" style="margin-top: 30px;">
-		<div class="row" style="display: flex; justify-content: center;">
-			<div class="col-md-10 col-sm-12">
-				<div class="skills">
-					<h2 class="white">Integrations</h2>
-					<h4>AI & Automation</h4>
-					<ul>
-						<li>
-							<div>
-								<strong>Azure OpenAI</strong>
-							</div>
-						</li>
-					</ul>
+	<svg height="0" width="0" viewBox="0 0 93.88 76.19" style="position: absolute;" aria-hidden="true">
+		<!-- The picture's CRT look.
+		     1. Curved glass: barrel distortion from a displacement map that js/resume.js draws into
+		        #crt-map (red = x shift, green = y shift, scale must match CURVE_SCALE). The map is
+		        sized 100% so it always covers the element, whatever the zoom. Until it's drawn the
+		        neutral flood (no shift) shows through. The slight blur hides the stair-steps left by
+		        the displacement's nearest-pixel sampling.
+		     2. Faint chromatic aberration: red shifted left, blue right, mixed 50/50 with the original. -->
+		<filter id="crt" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+			<feFlood flood-color="rgb(128, 128, 0)" result="neutral" />
+			<feImage id="crt-map" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="drawnMap" />
+			<feComposite in="drawnMap" in2="neutral" operator="over" result="map" />
+			<feDisplacementMap in="SourceGraphic" in2="map" scale="60" xChannelSelector="R" yChannelSelector="G" result="bent" />
+			<feGaussianBlur in="bent" stdDeviation="0.5" result="curved" />
+			<feOffset in="curved" dx="-1.5" result="left" />
+			<feOffset in="curved" dx="1.5" result="right" />
+			<feColorMatrix in="left" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="red" />
+			<feColorMatrix in="curved" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="green" />
+			<feColorMatrix in="right" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="blue" />
+			<feBlend in="red" in2="green" mode="screen" result="redGreen" />
+			<feBlend in="redGreen" in2="blue" mode="screen" result="split" />
+			<feComposite in="split" in2="curved" operator="arithmetic" k2="0.5" k3="0.5" />
+		</filter>
+		<!-- The cabinet's outline: every side bows outward between the corners, like the moulded
+		     plastic of a real set. In fractions of .tv-set::before, so it scales with the TV. -->
+		<clipPath id="setShape" clipPathUnits="objectBoundingBox">
+			<path
+				d="M.0459.0204C.2725-.0068.7275-.0068.9541.0204A.0249.0294 0 0 1 .979.0498C1.007.2749 1.007.7251.979.9502A.0249.0294 0 0 1 .9541.9796C.7275 1.0068.2725 1.0068.0459.9796A.0249.0294 0 0 1 .021.9502C-.007.7251-.007.2749.021.0498A.0249.0294 0 0 1 .0459.0204Z" />
+		</clipPath>
+		<!-- The bezel's inner edge: the same outline as #crtPath below, over the slightly larger
+		     recess, so the frame follows the curve of the glass. Keep the two paths identical. -->
+		<clipPath id="tubeShape" clipPathUnits="objectBoundingBox" transform="scale(0.01065 0.01312)">
+			<path
+				d="M47.78.5c11.65,0,38,.92,41.81,4,3.59,3,3.79,22.28,3.79,34.19,0,11.67-.08,27.79-3.53,31.24S60.3,75.69,47.78,75.69c-11.2,0-39.89-1.16-44-5.27S.57,52.42.57,38.73.31,8.56,4,4.88,34.77.5,47.78.5Z" />
+		</clipPath>
+		<clipPath id="crtPath" clipPathUnits="objectBoundingBox" transform="scale(0.01065 0.01312)">
+			<path
+				d="M47.78.5c11.65,0,38,.92,41.81,4,3.59,3,3.79,22.28,3.79,34.19,0,11.67-.08,27.79-3.53,31.24S60.3,75.69,47.78,75.69c-11.2,0-39.89-1.16-44-5.27S.57,52.42.57,38.73.31,8.56,4,4.88,34.77.5,47.78.5Z" />
+		</clipPath>
+	</svg>
 
-					<h4>Analytics & Tracking</h4>
-					<ul>
-						<li>
-							<div>
-								<strong>Google Analytics</strong>
-							</div>
-						</li>
-						<li>
-							<div>
-								<strong>Heap</strong>
-							</div>
-						</li>
-						<li>
-							<div>
-								<strong>Mixpanel</strong>
-							</div>
-						</li>
-					</ul>
-
-					<h4>Communication & Collaboration</h4>
-					<ul>
-						<li>
-							<div>
-								<strong>Discord</strong>
-							</div>
-						</li>
-						<li>
-							<div>
-								<strong>Slack</strong>
-							</div>
-						</li>
-					</ul>
-
-					<h4>CRM & Marketing</h4>
-					<ul>
-						<li>
-							<div>
-								<strong>HubSpot</strong>
-							</div>
-						</li>
-						<li>
-							<div>
-								<strong>eWebinar</strong>
-							</div>
-						</li>
-						<li>
-							<div>
-								<strong>SendGrid</strong>
-							</div>
-						</li>
-					</ul>
-
-					<h4>Design & Architecture</h4>
-					<ul>
-						<li>
-							<div>
-								<strong>Autodesk Revit</strong>
-							</div>
-						</li>
-					</ul>
-
-					<h4>E-commerce</h4>
-					<ul>
-						<li>
-							<div>
-								<strong>Shopify</strong>
-							</div>
-						</li>
-					</ul>
-
-					<h4>Finance & Payments</h4>
-					<ul>
-						<li>
-							<div>
-								<strong>QuickBooks</strong>
-							</div>
-						</li>
-						<li>
-							<div>
-								<strong>Stripe</strong>
-							</div>
-						</li>
-					</ul>
-
-				</div>
-			</div>
-		</div>
-	</section>
-	<br>
-	<br>
-	<br>
-
-	<!-- javascript js -->
-	<script src="js/jquery.js"></script>
-	<script src="js/bootstrap.min.js"></script>
-	<script src="js/jquery.backstretch.min.js"></script>
-	<script src="js/custom.js"></script>
-
+	<script src="js/resume.js"></script>
 </body>
 
 </html>

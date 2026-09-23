@@ -1,0 +1,3303 @@
+/*
+  Resume styled after the WeatherSTAR 4000 "Current Conditions" screen
+  (see the WeatherChannel project). Sizes are design pixels for a 914 x 680
+  screen (480 wide on phones); js/resume.js zooms the whole TV to fit.
+*/
+
+:root {
+  --tv-w: 1198;
+  --tv-fit-h: 848; /* bezel 40 + recess 24 + screen 680 + panel 104 */
+  --s: 1;
+  --purple: #291b61;
+  --orange: rgb(255, 160, 0);
+  --blue: rgb(0, 44, 255);
+  --box: #2b3b64;
+  --glow: #5381e1;
+  --navy: #21325d;
+  --yellow: #ff0;
+  --shadow: 5px 3px 2px #000, 3px 3px 0 #000;
+  --scan-color: rgba(0, 0, 0, 0.03);
+  --squish: 0.82;
+  /* Matte plastic, shared by the set and the remote: one grain of noise lit from above — a pale
+     speckle with the same speckle in black a pixel below it, so it reads as fine bumps. */
+  --plastic-grain:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.14 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")
+      0 0,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.04 0 0 0 0 0.04 0 0 0 0 0.05 0 0 0 0.18 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")
+      1px 1px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  padding: 20px 16px 48px;
+  overflow-x: hidden;
+  background: #000;
+  color: #fff;
+  font-family: 'Fragment Mono', monospace;
+}
+
+/* remote (150) + gap (46) + set (1002) = --tv-w */
+.tv {
+  zoom: var(--s);
+  display: grid;
+  grid-template-columns: 150px 1002px;
+  column-gap: 46px;
+  width: calc(var(--tv-w) * 1px);
+  margin: 0 auto;
+}
+
+/* ---------- the set: bezel, tube and front panel ---------- */
+
+/* The cabinet is drawn by ::before, clipped to #setShape so its sides bow outward the way a
+   CRT's do. It sits a little outside the layout box, which is why the insets are negative. */
+.tv-set {
+  position: relative;
+  grid-area: 1 / 2;
+  isolation: isolate;
+  padding: 40px 44px 0;
+}
+
+.tv-set::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -18px -22px;
+  clip-path: url(#setShape);
+  background: var(--plastic-grain),
+    /* the cabinet sides falling away from the light */
+    linear-gradient(90deg, rgba(0, 0, 0, 0.26) 0, rgba(0, 0, 0, 0) 52px, rgba(0, 0, 0, 0) calc(100% - 52px),
+      rgba(0, 0, 0, 0.26) 100%),
+    linear-gradient(180deg, #43484f 0%, #3c4148 42%, #2d3238 100%);
+  /* the drop shadows follow the clipped outline, which box-shadow would not */
+  filter: drop-shadow(0 -1px 0 rgba(255, 255, 255, 0.22)) drop-shadow(0 16px 26px rgba(0, 0, 0, 0.75));
+}
+
+/* The dark recess the tube sits in. Its ::before is clipped to the same outline as the picture
+   (a size larger), so the frame's inner edge follows the curve of the glass. */
+.tv-tube {
+  position: relative;
+  isolation: isolate;
+  padding: 12px;
+}
+
+.tv-tube::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #000 0, #191919 22px, #151515 100%);
+  clip-path: url(#tubeShape);
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.22));
+}
+
+.tv-panel {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 104px;
+  padding: 0 30px;
+}
+
+/* perforated speaker grilles either side of the controls */
+.tv-panel::before,
+.tv-panel::after {
+  content: '';
+  flex: 1;
+  height: 48px;
+  border-radius: 5px;
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.42) 0 0.9px, transparent 1.3px);
+  background-size: 7px 7px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+/* remote sensor, which doubles as the power lamp */
+.tv-ir {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #3a3d42, #0d0d0d);
+  box-shadow: inset 0 0 2px #000, 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+#switch:checked ~ .tv-set .tv-ir {
+  background: radial-gradient(circle at 35% 30%, #ffb2a6, #cc1206);
+  box-shadow: 0 0 8px rgba(255, 60, 40, 0.8);
+}
+
+.tv-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.tv-keys {
+  display: flex;
+  gap: 7px;
+}
+
+.tv-key {
+  appearance: none;
+  width: 26px;
+  height: 15px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #737981, #575c64);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.26),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.32), 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+label.tv-key,
+button.tv-key {
+  position: relative;
+  cursor: pointer;
+}
+
+/* a hit area larger than the key itself, for thumbs */
+label.tv-key::after,
+button.tv-key::after {
+  content: '';
+  position: absolute;
+  inset: -9px -5px;
+}
+
+label.tv-key:active,
+button.tv-key:active,
+#switch:checked ~ .tv-set .tv-power {
+  background: linear-gradient(180deg, #43484f, #383d44);
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.55);
+}
+
+#switch:focus-visible ~ .tv-set .tv-power,
+button.tv-key:focus-visible {
+  outline: 2px solid #2f6fe6;
+  outline-offset: 3px;
+}
+
+.tv-key-labels {
+  display: grid;
+  grid-template-columns: 26px 59px 59px;
+  gap: 7px;
+  color: #d8dce1;
+  font: 700 9px/1 Arial, 'Helvetica Neue', sans-serif;
+  letter-spacing: 0.4px;
+  text-align: center;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
+  text-transform: uppercase;
+}
+
+.tv-jacks {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tv-jack {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px #4e535a, 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.tv-jack.yellow {
+  background: radial-gradient(circle, #111 0 4px, #c39a15 4.5px);
+}
+
+.tv-jack.white {
+  background: radial-gradient(circle, #111 0 4px, #dcdbd5 4.5px);
+}
+
+/* ---------- screen ---------- */
+
+.screen {
+  position: relative;
+  background: radial-gradient(ellipse at 28% 18%, #2a2a2a 0%, #111 45%, #070707 100%);
+  clip-path: url(#crtPath);
+}
+
+.contents {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  height: 680px;
+  background: #333;
+  text-shadow: var(--shadow);
+}
+
+/* Curved glass + faint chromatic aberration over the whole picture (#crt in index.html).
+   It sits on the children, which are all screen-sized so the curve lines up, because
+   .contents' own filter is taken by the power animations. */
+.contents > * {
+  filter: url(#crt);
+}
+
+.chrome {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.page {
+  grid-area: 1 / 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 41px 85px 1fr auto;
+  min-height: 0;
+  visibility: hidden;
+}
+
+.page.active {
+  visibility: visible;
+}
+
+.band {
+  background: var(--purple);
+}
+
+.head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-left: 222px;
+  background: linear-gradient(0deg, var(--purple) -5%, var(--orange) 100%);
+}
+
+.head::after {
+  content: '';
+  position: absolute;
+  top: -1px;
+  right: 0;
+  bottom: 0;
+  width: 270px;
+  background: var(--purple);
+  clip-path: polygon(71px 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.title {
+  margin: 0;
+  color: var(--yellow);
+  font-size: 40px;
+  font-weight: normal;
+  line-height: 39px;
+  letter-spacing: -2px;
+}
+
+.infobox {
+  display: flex;
+  justify-content: center;
+  min-height: 0;
+  background: linear-gradient(0deg, var(--orange) 42%, var(--blue) 100%);
+  border-bottom: 3px solid var(--navy);
+}
+
+.box {
+  position: relative;
+  width: 800px;
+  padding: 30px 48px 24px;
+  overflow: hidden;
+  background: var(--box);
+  box-shadow: inset 0 0 13px 20px var(--glow);
+}
+
+.foot {
+  height: 107px;
+  padding: 8px 60px 0 74px;
+  background: var(--navy);
+  border-top: 2px solid #c3c3c3;
+}
+
+.foot p {
+  margin: 0;
+  font-size: 43px;
+  line-height: 39px;
+  letter-spacing: -1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: scaleX(var(--squish));
+  transform-origin: left;
+}
+
+/* ---------- on-screen channel display ---------- */
+
+/* Above the picture, below the scanlines; js/resume.js adds .show for a few seconds. */
+.osd {
+  position: absolute;
+  z-index: 5;
+  top: 42px;
+  right: 84px;
+  color: #5dff7c;
+  font-family: Consolas, 'Lucida Console', Menlo, Monaco, monospace;
+  font-size: 72px;
+  font-weight: normal;
+  line-height: 1;
+  letter-spacing: 3px;
+  word-spacing: 6px;
+  /* black outline, then chromatic aberration (red fringe left, blue right) peeking past it, then a green glow */
+  text-shadow:
+    -2px -2px 0 #000, 0 -2px 0 #000, 2px -2px 0 #000, -2px 0 0 #000, 2px 0 0 #000, -2px 2px 0 #000, 0 2px 0 #000, 2px 2px 0 #000,
+    -4px 0 1px rgba(255, 40, 70, 0.75), 4px 0 1px rgba(40, 110, 255, 0.75),
+    0 0 16px rgba(93, 255, 124, 0.5);
+  filter: blur(1.2px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.osd.show {
+  opacity: 1;
+}
+
+#switch:not(:checked) ~ .tv-set .screen .osd {
+  visibility: hidden;
+}
+
+/* Now-playing marquee: a see-through band below the footer text, styled like the OSD.
+   js/resume.js fades the band and scrolls the text; padding-left: 100% starts the name
+   just off the right edge so translateX(-100%) carries it fully off the left. */
+.marquee {
+  position: absolute;
+  z-index: 5;
+  right: 0;
+  bottom: 24px;
+  left: 0;
+  height: 40px;
+  overflow: hidden;
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.5) 22%, rgba(0, 0, 0, 0.5) 78%, transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.marquee-text {
+  display: inline-block;
+  padding-left: 100%;
+  color: #5dff7c;
+  font-family: Consolas, 'Lucida Console', Menlo, Monaco, monospace;
+  font-size: 30px;
+  line-height: 40px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-shadow:
+    -2px -2px 0 #000, 0 -2px 0 #000, 2px -2px 0 #000, -2px 0 0 #000, 2px 0 0 #000, -2px 2px 0 #000, 0 2px 0 #000, 2px 2px 0 #000,
+    -3px 0 1px rgba(255, 40, 70, 0.75), 3px 0 1px rgba(40, 110, 255, 0.75),
+    0 0 12px rgba(93, 255, 124, 0.5);
+  filter: blur(0.8px);
+}
+
+/* reduced motion: the name fades in and out without scrolling */
+.marquee.still .marquee-text {
+  padding-left: 80px;
+}
+
+#switch:not(:checked) ~ .tv-set .screen .marquee {
+  visibility: hidden;
+}
+
+/* Static for channel changes; js/resume.js draws the noise and fades it. */
+.snow {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#switch:not(:checked) ~ .tv-set .screen .snow {
+  visibility: hidden;
+}
+
+/* ---------- shared chrome: logo + clock ---------- */
+
+.logo {
+  position: absolute;
+  z-index: 3;
+  top: 36px;
+  left: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 152px;
+  height: 106px;
+  border: 4px solid #e4e9ff;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #4d6bff 0%, #1f36d6 55%, #2c49f0 100%);
+  box-shadow: inset 0 0 0 3px #1326a8, 5px 4px 0 #0b1147;
+  color: #fff;
+  font: 900 29px/0.92 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 0 #0b1147, -1px -1px 0 #0b1147, 1px -1px 0 #0b1147, -1px 1px 0 #0b1147;
+}
+
+.logo span {
+  display: block;
+  transform: scaleX(0.8);
+}
+
+.clock {
+  position: absolute;
+  z-index: 2;
+  top: 55px;
+  right: 95px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 28px;
+  line-height: 28px;
+  letter-spacing: 5px;
+  white-space: pre;
+}
+
+/* ---------- box content ---------- */
+
+/* Horizontally condensed text, like the WeatherSTAR font. */
+.sq {
+  width: calc(100% / var(--squish));
+  transform: scaleX(var(--squish));
+  transform-origin: 0 0;
+}
+
+.box h1,
+.box h3,
+.box p,
+.box ul,
+.box dl,
+.box dd {
+  margin: 0;
+  padding: 0;
+  font-weight: normal;
+}
+
+.lead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px !important;
+  color: var(--yellow);
+  font-size: 40px;
+  line-height: 40px;
+  letter-spacing: -2px;
+}
+
+.list {
+  list-style: none;
+  font-size: 27px;
+  line-height: 31px;
+  letter-spacing: -1px;
+}
+
+.list li {
+  position: relative;
+  padding-left: 26px;
+}
+
+.list li + li {
+  margin-top: 12px;
+}
+
+.list li::before {
+  content: '-';
+  position: absolute;
+  left: 0;
+  color: var(--yellow);
+}
+
+.contents a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.5);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+}
+
+.contents a:hover,
+.contents a:focus-visible {
+  color: var(--yellow);
+  text-decoration-color: currentColor;
+}
+
+/* current conditions */
+.conditions {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  column-gap: 34px;
+}
+
+.conditions-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 8px;
+}
+
+.photo {
+  display: block;
+  width: 186px;
+  height: 186px;
+  object-fit: cover;
+  border: 3px solid #e4e9ff;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.condition {
+  margin-top: 22px !important;
+  text-align: center;
+  font-size: 28px;
+  line-height: 32px;
+  letter-spacing: -2px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 21px;
+  font-size: 32px;
+  line-height: 39px;
+  letter-spacing: -2px;
+}
+
+/* technologies */
+.bars {
+  list-style: none;
+}
+
+.bars li + li {
+  margin-top: 12px;
+}
+
+.bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 28px;
+  line-height: 28px;
+  letter-spacing: -1.5px;
+}
+
+.bar {
+  height: 8px;
+  margin-top: 5px;
+  background: #1d284a;
+  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* ends in a soft gold rather than pure yellow, which glares under the TV's brightness boost */
+.bar span {
+  display: block;
+  width: var(--w);
+  height: 100%;
+  background: linear-gradient(90deg, #d98400, #d8a52c);
+  box-shadow: 3px 3px 0 #000;
+}
+
+/* The WeatherSTAR logo and clock belong to the weather-style channels; pages marked
+   data-own-chrome (the guide and the quiz boards) have their own look. */
+.contents.own-chrome > .chrome {
+  visibility: hidden;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- channel 02: about, styled after a VHS copyright-warning screen ---------- */
+
+/* the bottom padding keeps the strip below free for the now-playing marquee */
+.page.warning {
+  display: flex;
+  padding: 44px 62px 72px;
+  background: radial-gradient(ellipse at 50% 45%, #2d30ad 0%, #24278f 60%, #1b1d6e 100%);
+  text-shadow: none;
+}
+
+.warning-panel {
+  display: grid;
+  flex: 1;
+  grid-template-columns: 31% 1fr;
+  padding: 16px 16px 16px 0;
+  border-radius: 30px;
+  background: #fbfbf6;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.warning-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+  color: #25267f;
+}
+
+/* tall, narrow letters like the original's: stretched 2.7x vertically, with margins that
+   reserve the height the stretch adds (caps are ~0.86em: 0.86 x 118 x 2.7 ≈ 274px) */
+.warning-letters {
+  margin: 92px 0;
+  font: 700 118px/0.8 Oswald, 'Arial Narrow', sans-serif;
+  letter-spacing: -1px;
+  transform: scaleY(2.7);
+}
+
+.warning-seal {
+  width: 150px;
+  height: 150px;
+}
+
+.warning-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 18px 30px 22px 26px;
+  border-radius: 4px 20px 20px 4px;
+  background: linear-gradient(180deg, #2b2ea2, #23268c);
+  color: #fff;
+}
+
+.warning-title {
+  margin: 0 0 16px;
+  font: 900 50px/1 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: 1px;
+  text-align: center;
+  text-shadow: 3px 3px 3px rgba(0, 0, 0, 0.55);
+  text-transform: uppercase;
+}
+
+.warning-box p {
+  margin: 0;
+  font: 400 26px/1.2 Oswald, 'Arial Narrow', sans-serif;
+  text-align: justify;
+  text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+  hyphens: auto;
+}
+
+.warning-box p + p {
+  margin-top: 20px;
+}
+
+/* ---------- channel 03: DesignSpec lead role as breaking news ---------- */
+
+/* the lower third stops above the strip left for the now-playing marquee */
+.page.news {
+  position: relative;
+  display: block;
+  /* a light dark wash keeps the image's pale edges from blowing out under the TV's brightness */
+  background:
+    radial-gradient(ellipse at 50% 45%, transparent 45%, rgba(20, 10, 0, 0.4) 100%),
+    linear-gradient(rgba(20, 10, 0, 0.18), rgba(20, 10, 0, 0.18)),
+    #2a1d10 url(../images/designspec-news.avif) center / cover no-repeat;
+  text-shadow: none;
+}
+
+.news-live {
+  position: absolute;
+  top: 46px;
+  left: 72px;
+  padding: 5px 12px 4px;
+  background: linear-gradient(180deg, #e3281f, #b11610);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  color: #fff;
+  font: 700 24px/1 Oswald, 'Arial Narrow', sans-serif;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* company logo on a white plate, centred in the picture above the lower third */
+.news-logo {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  display: block;
+  width: 440px;
+  padding: 18px 30px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  transform: translate(-50%, -50%);
+}
+
+.news-logo img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.contents .news-logo:focus-visible {
+  outline: 3px solid #d51d16;
+  outline-offset: 3px;
+}
+
+.news-lower {
+  position: absolute;
+  right: 62px;
+  bottom: 72px;
+  left: 62px;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35));
+}
+
+/* red flag with a smaller white tag beside it, both sitting on the headline bar */
+.news-flags {
+  display: flex;
+  align-items: flex-end;
+}
+
+.news-tag {
+  padding: 6px 12px 4px;
+  background: linear-gradient(180deg, #ffffff, #ececec);
+  color: #1b1b1b;
+  font: 600 18px/1 Oswald, 'Arial Narrow', sans-serif;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.news-flag {
+  display: inline-block;
+  padding: 8px 16px 6px;
+  background: linear-gradient(180deg, #f23b2f 0%, #d51d16 55%, #9c0f0b 100%);
+  color: #fff;
+  font: 700 30px/1 Oswald, 'Arial Narrow', sans-serif;
+  letter-spacing: 0.5px;
+  text-shadow: 1px 2px 0 rgba(0, 0, 0, 0.35);
+  text-transform: uppercase;
+}
+
+.news-headline {
+  padding: 10px 18px 11px;
+  background: linear-gradient(180deg, #f3f3f3, #d8d8d8);
+  color: #161616;
+}
+
+.news-headline h2 {
+  margin: 0;
+  font: 700 36px/1.05 Oswald, 'Arial Narrow', sans-serif;
+  text-transform: uppercase;
+}
+
+.news-headline p {
+  margin: 4px 0 0;
+  color: #3a3a3a;
+  font: 600 19px/1.1 Oswald, 'Arial Narrow', sans-serif;
+}
+
+.contents .news-lower a {
+  text-decoration-color: rgba(0, 0, 0, 0.35);
+  text-underline-offset: 3px;
+}
+
+.contents .news-lower a:hover,
+.contents .news-lower a:focus-visible {
+  color: #b11610;
+}
+
+/* the yellow ticker, with the time in the black box; hovering pauses it */
+.news-ticker {
+  display: flex;
+  height: 42px;
+  background: #ffe81c;
+}
+
+.news-time {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  background: #000;
+  color: #fff;
+  font: 700 20px/1 Oswald, 'Arial Narrow', sans-serif;
+}
+
+.news-ticker-view {
+  flex: 1;
+  overflow: hidden;
+}
+
+.news-ticker-track {
+  display: flex;
+  width: max-content;
+  animation: news-scroll var(--ticker-s, 60s) linear infinite;
+}
+
+.news-ticker:hover .news-ticker-track,
+.news-ticker:focus-within .news-ticker-track {
+  animation-play-state: paused;
+}
+
+.news-ticker-text {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.news-ticker-text li {
+  flex: none;
+  padding-left: 16px;
+  color: #111;
+  font: 600 22px/42px Oswald, 'Arial Narrow', sans-serif;
+  white-space: nowrap;
+}
+
+.news-ticker-text li::after {
+  content: '■';
+  margin-left: 16px;
+  color: #c8161d;
+  font-size: 13px;
+  vertical-align: 3px;
+}
+
+/* two copies of the list side by side, so sliding one copy's width loops seamlessly */
+@keyframes news-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ---------- channel 04: DesignSpec developer role as a late-night TV commercial ---------- */
+
+/* the bottom padding keeps the strip below free for the now-playing marquee */
+.page.promo {
+  --ink: #0c1a4a;
+  --outline: -2px -2px 0 var(--ink), 0 -2px 0 var(--ink), 2px -2px 0 var(--ink), -2px 0 0 var(--ink),
+    2px 0 0 var(--ink), -2px 2px 0 var(--ink), 0 2px 0 var(--ink), 2px 2px 0 var(--ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 50px 66px 64px; /* clear of the tube's curved corners */
+  background: linear-gradient(180deg, #2f75e4 0%, #2461d2 55%, #1d52bd 100%);
+  color: #fff;
+  font-family: 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
+  text-align: center;
+  text-shadow: none;
+}
+
+.contents .page.promo a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.promo-top {
+  display: grid;
+  grid-template-columns: 54% 1fr;
+  gap: 20px;
+  width: 100%;
+  height: 246px;
+  margin-bottom: 6px;
+}
+
+.promo-shot {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  border: 4px solid #eef2ff;
+  box-shadow: 3px 3px 0 var(--ink);
+  background: #fff6f1;
+}
+
+.promo-shot a {
+  display: block;
+  height: 100%;
+}
+
+.contents .page.promo .promo-shot a:hover figcaption,
+.contents .page.promo .promo-shot a:focus-visible figcaption {
+  background: rgba(8, 20, 60, 0.9);
+  color: #fff27a;
+}
+
+/* drawn inside the edge, since the frame clips anything outside it */
+.contents .page.promo .promo-shot a:focus-visible {
+  outline: 3px solid #ffe33a;
+  outline-offset: -3px;
+}
+
+/* toned down to offset the TV's brightness boost, which blows the near-white page out */
+.promo-shot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 30%;
+  filter: brightness(0.8) contrast(1.15) saturate(1.1);
+}
+
+.promo-shot figcaption {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 4px 8px;
+  background: rgba(8, 20, 60, 0.72);
+  color: #ffe33a;
+  font: 700 14px/1.2 Arial, 'Helvetica Neue', sans-serif;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.promo-offer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* tech logos in place of the payment-card logos */
+.promo-cards {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.promo-cards li {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 78px;
+  height: 36px;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 2px 2px 0 var(--ink);
+  font: 700 12px/1 Arial, 'Helvetica Neue', sans-serif;
+}
+
+.card-angular {
+  background: linear-gradient(135deg, #e0223f, #b8102b);
+}
+
+.card-aspnet {
+  background: linear-gradient(135deg, #6a42e0, #4520b0);
+}
+
+.card-sql {
+  background: linear-gradient(135deg, #ffffff, #dfe4ee);
+  color: #c4221f;
+}
+
+.card-react {
+  background: linear-gradient(135deg, #2b303a, #15181e);
+  color: #61dafb;
+}
+
+.promo-deal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.promo-deal-lead {
+  color: #ffe33a;
+  font: italic 900 21px/1.1 'Arial Black', Arial, sans-serif;
+  text-shadow: var(--outline);
+}
+
+.promo-deal-big {
+  color: #ffc15e;
+  font: 900 76px/1 'Arial Black', Arial, sans-serif;
+  letter-spacing: -2px;
+  text-shadow: var(--outline), 4px 4px 0 var(--ink);
+}
+
+.promo-deal-big sup {
+  font-size: 0.55em;
+  vertical-align: 0.6em;
+}
+
+.promo-deal-small {
+  align-self: flex-end;
+  margin-top: -4px;
+  font: 700 15px/1 Arial, 'Helvetica Neue', sans-serif;
+  text-shadow: var(--outline);
+}
+
+.promo-guarantee {
+  margin: 0;
+  font-size: 21px;
+  line-height: 1.15;
+  text-shadow: var(--outline);
+  text-wrap: balance;
+}
+
+.contents .page.promo .promo-url {
+  color: #ffab3d;
+  font-size: 34px;
+  line-height: 1.1;
+  letter-spacing: 0.5px;
+  text-shadow: var(--outline), 3px 3px 0 var(--ink);
+}
+
+.contents .page.promo .promo-url:hover,
+.contents .page.promo .promo-url:focus-visible,
+.contents .page.promo .promo-deal:hover .promo-deal-big,
+.contents .page.promo .promo-deal:focus-visible .promo-deal-big {
+  color: #fff27a;
+}
+
+/* the job title takes the commercial's big phone-number slot */
+.promo-job {
+  margin: 0;
+  color: #fff;
+  font: 900 58px/1 'Arial Black', Arial, sans-serif;
+  letter-spacing: -1px;
+  text-shadow: -3px -3px 0 var(--ink), 3px -3px 0 var(--ink), -3px 3px 0 var(--ink), 3px 3px 0 var(--ink),
+    0 -3px 0 var(--ink), 0 3px 0 var(--ink), -3px 0 0 var(--ink), 3px 0 0 var(--ink), 6px 6px 0 #0a1233;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* the years take the condensed italic product-name slot */
+.promo-years {
+  margin: 0;
+  color: #dfe8ff;
+  font: italic 700 64px/1 Oswald, 'Arial Narrow', sans-serif;
+  letter-spacing: 1px;
+  text-shadow: var(--outline), 4px 4px 0 var(--ink);
+}
+
+.promo-fine {
+  display: flex;
+  justify-content: space-between;
+  width: 86%;
+  margin: -6px 0 0;
+  font: 700 15px/1.2 Arial, 'Helvetica Neue', sans-serif;
+  text-shadow: var(--outline);
+}
+
+/* ---------- channel 06: education as a 1990s Weather Channel "outlook" title screen ---------- */
+
+/* rows: title bars, photo, bottom bar; the bottom padding keeps the strip below free for the
+   now-playing marquee. The logo reuses the shared .logo styles, positioned on this page. */
+/* bar colours are a little darker than the original's, to offset the TV's brightness boost */
+.page.outlook {
+  --bar-light: #c2adb2;
+  --bar-dark: #4a383e;
+  --bar: #927a80;
+  position: relative;
+  display: grid;
+  grid-template-rows: 112px minmax(0, 1fr) auto;
+  row-gap: 10px;
+  padding: 30px 0 58px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.29 0 0 0 0 0.28 0 0 0 0.45 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.34 0 0 0 0 0.33 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    #a3a09d;
+  color: #fff;
+  font-family: Georgia, 'Times New Roman', serif;
+  text-shadow: none;
+}
+
+/* bevelled stripes shared by the title bars and the bottom bar */
+.outlook-title::before,
+.outlook-title::after,
+.outlook-bar {
+  background: linear-gradient(180deg,
+    var(--bar-light) 0 3px, var(--bar-dark) 3px 5px, var(--bar) 5px calc(100% - 5px),
+    var(--bar-dark) calc(100% - 5px) calc(100% - 3px), var(--bar-light) calc(100% - 3px));
+}
+
+.outlook-title {
+  position: relative;
+  margin-left: 250px;
+  padding: 0 70px 0 60px;
+  text-align: center;
+}
+
+.outlook-title::before,
+.outlook-title::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  left: 0;
+}
+
+.outlook-title::before {
+  top: 14px;
+  height: 20px;
+  clip-path: polygon(12px 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.outlook-title::after {
+  top: 44px;
+  left: 20px;
+  height: 58px;
+  clip-path: polygon(30px 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.outlook-kicker,
+.outlook-big {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+}
+
+.outlook-kicker {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.5px;
+  text-shadow: 3px 3px 2px rgba(35, 25, 35, 0.8);
+}
+
+.outlook-big {
+  margin-top: 6px;
+  color: #c6d2f3;
+  font-size: 54px;
+  font-style: italic;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 3px;
+  text-shadow: -1px -1px 0 #f4f7ff, 3px 3px 0 #2c2f5c, 5px 5px 3px rgba(0, 0, 0, 0.45);
+  text-transform: uppercase;
+}
+
+/* the photo in a panel with a slanted left edge, casting a shadow on the grey */
+.outlook-photo {
+  margin-left: 108px;
+  filter: drop-shadow(-10px 8px 6px rgba(0, 0, 0, 0.45));
+}
+
+.outlook-photo div {
+  height: 100%;
+  background: url(../images/rrc-campus.jpg) 50% 30% / cover no-repeat;
+  clip-path: polygon(78px 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.outlook-bar {
+  margin-left: 56px;
+  padding: 11px 76px 12px 64px;
+  clip-path: polygon(24px 0, 100% 0, 100% 100%, 0 100%);
+  text-shadow: 2px 2px 2px rgba(30, 18, 26, 0.9);
+  text-wrap: balance;
+}
+
+.outlook-bar p {
+  margin: 0;
+}
+
+.outlook-program {
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.outlook-focus {
+  margin-top: 2px !important;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.contents .outlook-bar a {
+  color: #fff;
+  text-decoration-color: rgba(255, 255, 255, 0.6);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.contents .outlook-bar a:hover,
+.contents .outlook-bar a:focus-visible {
+  color: #e7edff;
+  text-decoration-color: currentColor;
+}
+
+/* ---------- channel 05: Varian internship as a word-puzzle game board ---------- */
+
+/* starry backdrop with two gold arcs; the bottom padding keeps the marquee strip free */
+.page.wof {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 58px 40px 64px;
+  overflow: hidden;
+  background:
+    radial-gradient(1.5px 1.5px at 23px 31px, #bfe9ff, transparent),
+    radial-gradient(1px 1px at 71px 88px, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 118px 17px, #9fdcff, transparent),
+    radial-gradient(1px 1px at 160px 120px, #fff, transparent),
+    radial-gradient(1px 1px at 41px 142px, #cfefff, transparent),
+    #05070f;
+  background-size: 180px 160px;
+  color: #fff;
+  text-shadow: none;
+}
+
+.page.wof::before,
+.page.wof::after {
+  content: '';
+  position: absolute;
+  left: -12%;
+  right: -12%;
+  border-top: 7px solid #d9a25b;
+  border-radius: 50%;
+  box-shadow: inset 0 4px 6px -3px rgba(255, 214, 150, 0.7);
+  pointer-events: none;
+}
+
+.page.wof::before {
+  top: 14px;
+  height: 260px;
+}
+
+.page.wof::after {
+  top: 44px;
+  left: 4%;
+  right: 4%;
+  height: 220px;
+  border-top-width: 5px;
+  opacity: 0.85;
+}
+
+/* The stepped frame: three nested layers (gold, white, black) that share one outline. With the
+   same notch width (--n) and step height (--s), each layer's outline is the one inside it
+   grown by its padding, so the borders stay even round the steps. */
+.wof-frame {
+  --tw: 50px;
+  --th: 62px;
+  --gap: 4px;
+  --pad: 6px;
+  --n: calc(var(--tw) + var(--gap));
+  --s: calc(var(--pad) + var(--th) + var(--gap) / 2);
+  --frame-shape: polygon(var(--n) 0, calc(100% - var(--n)) 0, calc(100% - var(--n)) var(--s), 100% var(--s),
+    100% calc(100% - var(--s)), calc(100% - var(--n)) calc(100% - var(--s)), calc(100% - var(--n)) 100%,
+    var(--n) 100%, var(--n) calc(100% - var(--s)), 0 calc(100% - var(--s)), 0 var(--s), var(--n) var(--s));
+  position: relative;
+  z-index: 1;
+  padding: 12px;
+  background: linear-gradient(180deg, #f2c27c, #c98a3c 50%, #e7b36a);
+  clip-path: var(--frame-shape);
+}
+
+.wof-inner {
+  padding: 8px;
+  background: linear-gradient(180deg, #ffffff, #d9dde3);
+  clip-path: var(--frame-shape);
+}
+
+.wof-tiles {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 14), var(--tw));
+  grid-template-rows: repeat(4, var(--th));
+  gap: var(--gap);
+  padding: var(--pad);
+  background: #1f7a66;
+  clip-path: var(--frame-shape);
+}
+
+.wof-tile {
+  grid-row: var(--r);
+  grid-column: var(--c);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  font: 700 calc(var(--th) * 0.7) / 1 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* unused tiles: green with the wheel emblem */
+.wof-tile.blank {
+  --green: #16a15c;
+  background:
+    radial-gradient(circle, rgba(200, 255, 222, 0.9) 0 2.5px, transparent 3px),
+    radial-gradient(circle, transparent 0 calc(var(--tw) * 0.3), var(--green) calc(var(--tw) * 0.3 + 0.5px)),
+    repeating-conic-gradient(rgba(170, 255, 205, 0.5) 0 8deg, transparent 8deg 30deg),
+    linear-gradient(180deg, #1dbb6c, var(--green));
+  box-shadow: inset 0 0 0 2px #0d5a36;
+}
+
+/* puzzle tiles: lit white until their letter is called */
+.wof-tile.letter {
+  background: linear-gradient(180deg, #ffffff, #e6e9ee);
+  box-shadow: inset 0 0 0 2px #b7bec8;
+  color: #111;
+  cursor: pointer;
+}
+
+.wof-tile.letter:hover:not(.shown) {
+  background: linear-gradient(180deg, #ffffff, #d6e2f7);
+}
+
+.wof-tile.letter:focus-visible {
+  outline: 3px solid #ffb03a;
+  outline-offset: 1px;
+}
+
+/* called: glows blue, then turns to show the letter */
+.wof-tile.lit {
+  background: linear-gradient(180deg, #7fb6ff, #2f6fe6);
+  box-shadow: inset 0 0 0 2px #1b49a8, 0 0 12px 2px rgba(90, 160, 255, 0.8);
+}
+
+.wof-tile.shown {
+  cursor: default;
+  animation: wof-turn 0.35s ease-out;
+}
+
+@keyframes wof-turn {
+  from {
+    transform: rotateY(90deg);
+  }
+}
+
+.wof-category {
+  position: relative;
+  z-index: 1;
+  margin-top: 2px;
+  padding: 7px 34px 6px;
+  border: 2px solid #9fc3ff;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #2d6de4, #133e9e);
+  box-shadow: 0 0 14px rgba(70, 140, 255, 0.5);
+  font: 700 24px/1 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: 3px;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
+  text-transform: uppercase;
+}
+
+/* company logo (black on transparent, shown white) beside the years, split by a gold rule */
+.wof-company {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 0;
+  color: #f2d3a0;
+  font: 600 24px/1 'Helvetica Neue', Arial, sans-serif;
+}
+
+.wof-company a {
+  display: block;
+  padding-right: 18px;
+  border-right: 2px solid rgba(242, 211, 160, 0.6);
+}
+
+.wof-company img {
+  display: block;
+  width: 190px;
+  height: auto;
+  filter: invert(1);
+}
+
+.contents .wof-company a:focus-visible {
+  outline: 2px solid #f2d3a0;
+  outline-offset: 4px;
+}
+
+/* the ticker (shared with channel 03) in the board's gold */
+.wof-ticker {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  margin-top: 4px;
+  background: linear-gradient(180deg, #f5c77f, #d9994c);
+}
+
+.wof-ticker .news-ticker-text li {
+  color: #231200;
+}
+
+.wof-ticker .news-ticker-text li::after {
+  color: #0e8a4b;
+}
+
+/* ---------- "how to play" callouts on the game channels (05, 08, 09) ---------- */
+
+/* Styled like the INFO dialog. Each sits over empty cells with its arrow pointing at the
+   playable ones, and js/resume.js adds .done after the first move on that board. */
+.play-hint {
+  position: absolute;
+  left: 50%;
+  z-index: 3;
+  margin: 0;
+  padding: 8px 16px;
+  border: 2px solid #c3c3c3;
+  border-radius: 10px;
+  background: var(--navy);
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.55), 0 0 24px rgba(83, 129, 225, 0.45);
+  color: #fff;
+  font: 16px/1.35 'Fragment Mono', monospace;
+  text-align: center;
+  text-shadow: 2px 2px 0 #000;
+  white-space: nowrap;
+  translate: -50% 50%;
+  cursor: pointer;
+  animation: play-hint-bob 1.8s ease-in-out infinite;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+
+.play-hint::before {
+  content: '';
+  position: absolute;
+  top: -11px;
+  left: calc(50% - 9px);
+  width: 18px;
+  height: 18px;
+  border-top: 2px solid #c3c3c3;
+  border-left: 2px solid #c3c3c3;
+  background: var(--navy);
+  transform: rotate(45deg);
+}
+
+.play-hint strong {
+  color: var(--yellow);
+  font-weight: normal;
+}
+
+.play-hint.done {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.say-tap {
+  display: none;
+}
+
+@keyframes play-hint-bob {
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* puzzle: centred on the board's blank bottom row, pointing up at the letters */
+.wof-frame {
+  --edge: 26px; /* frame + inner + tile padding */
+}
+
+.wof-frame .play-hint {
+  bottom: calc(var(--edge) + var(--th) / 2);
+}
+
+/* quiz board: over the empty cells at the bottom right ($800/$1000 of the last two columns),
+   pointing up at the values */
+.quiz-board .play-hint {
+  right: 14px;
+  bottom: 17%;
+  left: auto;
+  width: 214px;
+  padding: 8px 12px;
+  white-space: normal;
+  translate: 0 50%;
+}
+
+/* ---------- channel 00: program guide (modelled on a 2000s cable guide) ---------- */
+
+/* the bottom padding keeps the strip below the ad free for the now-playing marquee */
+.page.epg {
+  display: flex;
+  flex-direction: column;
+  padding: 30px 56px 70px;
+  background: linear-gradient(180deg, #0a1745 0%, #0e2566 45%, #0a1847 100%);
+  color: #fff;
+  font-family: Arial, 'Helvetica Neue', sans-serif;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6);
+}
+
+.epg-top {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 18px;
+  height: 164px;
+}
+
+.epg-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* mail, time and badge together at the right */
+  gap: 14px;
+  height: 44px;
+}
+
+.epg-mail {
+  display: flex;
+  color: #fff;
+}
+
+.epg-mail svg,
+.epg-ad-icon svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.epg-time {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.epg-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2px 6px;
+  border: 2px solid #ffd23a;
+  border-radius: 4px;
+  background: #d81e1e;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.epg-info {
+  padding-top: 8px;
+}
+
+.epg-info-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.epg-info-title {
+  overflow: hidden;
+  color: #ffe766;
+  font-size: 23px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.epg-info-ch {
+  flex: none;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.epg-info-time:empty {
+  display: none;
+}
+
+.epg-info-time {
+  margin-top: 4px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.epg-info-desc {
+  margin: 6px 0 0;
+  color: #dce4ff;
+  font-size: 16px;
+  line-height: 1.3;
+}
+
+/* live preview of the highlighted channel: a scaled-down copy of its page */
+.epg-preview {
+  position: relative;
+  overflow: hidden;
+  border: 2px solid #6f8fd8;
+  background: #000;
+}
+
+.epg-preview-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  width: 914px;
+  height: 680px;
+  background: #333;
+  text-shadow: var(--shadow);
+  transform: scale(0.2363); /* 216px inside the preview's border / 914 */
+  transform-origin: 0 0;
+}
+
+.epg-preview-screen > .page {
+  visibility: visible;
+}
+
+.epg-times,
+.epg-row {
+  display: grid;
+  grid-template-columns: 110px repeat(3, 1fr);
+  gap: 2px;
+}
+
+.epg-times {
+  height: 30px;
+  margin-top: 6px;
+  background: #06103a;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 30px;
+}
+
+.epg-times span {
+  padding-left: 10px;
+}
+
+.epg-row {
+  height: 35px;
+  margin-top: 2px;
+}
+
+.epg-ch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 10px;
+  background: #16307a;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.epg-ch b {
+  font-size: 17px;
+}
+
+.epg-cell {
+  overflow: hidden;
+  padding: 0 10px;
+  border: 0;
+  background: linear-gradient(180deg, #2f5ccc, #2148aa);
+  color: #fff;
+  font: 700 17px Arial, 'Helvetica Neue', sans-serif;
+  text-align: left;
+  text-overflow: ellipsis;
+  text-shadow: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.epg-cell.span-2 {
+  grid-column: span 2;
+}
+
+.epg-cell.span-3 {
+  grid-column: span 3;
+}
+
+.epg-cell.selected {
+  background: #f4e45c;
+  color: #000;
+  text-shadow: none;
+}
+
+.epg-cell:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: -3px;
+}
+
+.epg-ad {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 42px;
+  margin: auto 50px 0;
+  padding: 0 8px 0 7px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #f6f6f6, #cfcfcf);
+  color: #1a1a1a;
+  font-size: 16px;
+  font-weight: 700;
+  text-shadow: none;
+}
+
+/* it is a link, so it needs none of the underlining the picture gives links */
+.contents .epg-ad {
+  color: #1a1a1a;
+  text-decoration: none;
+}
+
+.contents .epg-ad:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.epg-ad-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: #d81e1e;
+  color: #fff;
+}
+
+.epg-ad-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.epg-ad-text {
+  flex: 1;
+}
+
+.epg-ad-text b {
+  color: #0e2566;
+}
+
+.contents .epg-ad-button {
+  padding: 5px 12px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #e53030, #b01414);
+  color: #fff;
+  font-size: 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.contents .epg-ad:hover .epg-ad-button,
+.contents .epg-ad:focus-visible .epg-ad-button {
+  color: var(--yellow);
+}
+
+.contents .epg-ad:hover .epg-ad-text b {
+  color: #b01414;
+}
+
+/* ---------- channels 09–10: quiz-show boards ---------- */
+
+/* Cells are placed from --c (category) and --r (row: 1 is the category header), set by
+   js/resume.js; phones swap them so categories run down the side. */
+.page.quiz {
+  display: flex;
+  flex-direction: column;
+  padding: 30px 46px 66px; /* the strip below is left for the now-playing marquee */
+  background: radial-gradient(ellipse at 50% 35%, #1b2a78 0%, #0b1238 60%, #050818 100%);
+  text-shadow: none;
+}
+
+/* gold light bar across the top of the set, carrying the round name */
+.quiz-round {
+  position: relative;
+  margin: 0 24px 10px;
+  padding: 4px 0 10px;
+  border-radius: 6px 6px 2px 2px;
+  background: linear-gradient(180deg, #8a6428 0%, #c9974a 45%, #6a4618 100%);
+  box-shadow: 0 2px 0 #2a1a06, 0 0 18px rgba(255, 190, 90, 0.25);
+  color: #fff6de;
+  font: 700 17px/1 Oswald, 'Arial Narrow', sans-serif;
+  letter-spacing: 3px;
+  text-align: center;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.55);
+  text-transform: uppercase;
+}
+
+.quiz-round::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  bottom: 3px;
+  left: 10px;
+  height: 4px;
+  background: repeating-linear-gradient(90deg, #aee0ff 0 24px, transparent 24px 30px);
+  opacity: 0.85;
+}
+
+.quiz-stage {
+  display: grid;
+  flex: 1;
+  grid-template-columns: 30px 1fr 30px;
+  gap: 12px;
+  min-height: 0;
+}
+
+/* orange light column in a blue frame, split into panels */
+.quiz-pillar {
+  border-radius: 4px;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 34px, rgba(60, 20, 0, 0.55) 34px 37px),
+    linear-gradient(90deg, #2c5cf0 0 5px, #f59431 5px calc(100% - 5px), #2c5cf0 calc(100% - 5px));
+  box-shadow: 0 0 16px rgba(80, 140, 255, 0.45), inset 0 0 0 1px #7fa6ff;
+}
+
+.quiz-board {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 6), minmax(0, 1fr));
+  grid-template-rows: 62px repeat(var(--rows, 5), minmax(0, 1fr));
+  gap: 5px;
+  padding: 5px;
+  border: 6px solid #2b2b2b;
+  border-radius: 4px;
+  background: #000;
+}
+
+.quiz-cat,
+.quiz-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  grid-column: var(--c);
+  grid-row: var(--r);
+  min-width: 0;
+  padding: 3px 5px;
+  background: linear-gradient(180deg, #0c1fd6, #0714a8);
+  box-shadow: inset 0 0 14px rgba(0, 0, 50, 0.55);
+  text-align: center;
+}
+
+.quiz-cat {
+  color: #fff;
+  font: 700 15px/1.05 Oswald, 'Arial Narrow', sans-serif;
+  letter-spacing: 0.3px;
+  text-shadow: 2px 2px 0 #000;
+  text-transform: uppercase;
+}
+
+.quiz-cell {
+  border: 0;
+  color: #e9ad4c;
+  font: 700 38px/1 Oswald, 'Arial Narrow', sans-serif;
+  text-shadow: 3px 3px 0 #000;
+  cursor: pointer;
+}
+
+.quiz-cell:hover {
+  background: linear-gradient(180deg, #1a30ee, #0b1cc4);
+}
+
+.quiz-cell:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: -3px;
+}
+
+/* a played clue shows what it was, so the finished board reads as a list */
+.quiz-cell.played {
+  color: #dfe5ff;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.1;
+  text-shadow: 2px 2px 0 #000;
+  text-transform: uppercase;
+}
+
+.quiz-cell.empty {
+  cursor: default;
+}
+
+/* the clue card: zooms out of its cell to fill the board */
+.quiz-clue {
+  position: absolute;
+  inset: 5px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  padding: 30px 56px;
+  border: 0;
+  background: linear-gradient(180deg, #0c1fd6, #0714a8);
+  box-shadow: inset 0 0 40px rgba(0, 0, 50, 0.6);
+  color: #fff;
+  font: 700 31px/1.3 Georgia, 'Times New Roman', serif;
+  text-align: center;
+  text-shadow: 3px 3px 0 #000;
+  text-transform: uppercase;
+  transform-origin: 0 0;
+  cursor: pointer;
+}
+
+.quiz-clue[hidden] {
+  display: none;
+}
+
+.quiz-response {
+  color: #e9ad4c;
+  font: 700 36px/1.1 Oswald, 'Arial Narrow', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+.quiz-response[hidden] {
+  display: none;
+}
+
+.quiz-clue-tip {
+  color: #9fb2ff;
+  font: 600 14px/1 Oswald, 'Arial Narrow', sans-serif;
+  letter-spacing: 1.5px;
+  text-shadow: none;
+}
+
+/* ---------- curved glass ---------- */
+
+/* Topmost layer of the tube (above the scanlines and the OSD), so it also shows while off. */
+.glass {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 55% 35% at 30% 10%, rgba(255, 255, 255, 0.09), transparent 70%),
+    radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(0, 0, 0, 0.3) 100%);
+  will-change: transform; /* its own layer: the blurs are drawn once, not on every scanline frame */
+}
+
+.glass svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.glass path {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+/* the flatter outline the picture takes on phones */
+.glass .shape-flat {
+  display: none;
+}
+
+/* Only the inner half of each stroke is visible (the screen clips the rest). */
+.glass-edge {
+  filter: blur(14px);
+}
+
+.glass-edge path {
+  stroke: rgba(0, 0, 0, 0.85);
+  stroke-width: 44px;
+}
+
+.glass-rim {
+  filter: blur(1.5px);
+  -webkit-mask-image: linear-gradient(165deg, #000 0%, transparent 40%);
+  mask-image: linear-gradient(165deg, #000 0%, transparent 40%);
+}
+
+.glass-rim path {
+  stroke: rgba(255, 255, 255, 0.45);
+  stroke-width: 4px;
+}
+
+/* ---------- scanlines + power (from the WeatherChannel project) ---------- */
+
+.scanlines {
+  overflow: hidden;
+}
+
+.scanlines::before,
+.scanlines::after {
+  content: '';
+  position: absolute;
+  display: block;
+  pointer-events: none;
+}
+
+.scanlines::before {
+  top: 0;
+  left: 0;
+  z-index: 11;
+  width: 100%;
+  height: 0.2rem;
+  opacity: 0.75;
+}
+
+.scanlines::after {
+  inset: 0;
+  z-index: 10;
+  will-change: transform; /* own layer, so its per-frame repaint doesn't re-run #crt below */
+}
+
+#switch:checked ~ .tv-set .screen.scanlines::before {
+  background: var(--scan-color);
+  animation: scan-moving 6s linear infinite;
+}
+
+#switch:checked ~ .tv-set .screen.scanlines::after {
+  background: linear-gradient(to bottom, transparent 50%, var(--scan-color) 51%);
+  background-size: 100% 0.4rem;
+  animation: scan-crt 1s steps(60) infinite;
+}
+
+#switch ~ .tv-set .screen > .contents {
+  animation: crt-power-off 0.55s forwards ease-in-out;
+}
+
+/* The page loads with the TV off: skip the power-off flash until it has been on. */
+.tv:not(.was-on) #switch:not(:checked) ~ .tv-set .screen > .contents {
+  animation: none;
+  opacity: 0;
+}
+
+/* A dark picture takes no clicks, for browsers that don't support inert either. */
+#switch:not(:checked) ~ .tv-set .screen > .contents {
+  pointer-events: none;
+}
+
+#switch:checked ~ .tv-set .screen > .contents {
+  animation: crt-power-on 4s forwards linear;
+}
+
+@keyframes scan-moving {
+  0% {
+    transform: translate3d(0, 100vh, 0);
+  }
+}
+
+@keyframes scan-crt {
+  0% {
+    background-position: 0 50%;
+  }
+}
+
+@keyframes crt-power-on {
+  0% {
+    transform: scale(1, 0.8) translate3d(0, 0, 0);
+    filter: brightness(30);
+    opacity: 1;
+  }
+  3.5% {
+    transform: scale(1, 0.8) translate3d(0, 100%, 0);
+  }
+  3.6% {
+    transform: scale(1, 0.8) translate3d(0, -100%, 0);
+  }
+  9% {
+    transform: scale(1.3, 0.6) translate3d(0, 100%, 0);
+  }
+  11% {
+    transform: scale(1, 1) translate3d(0, 0, 0);
+    filter: contrast(0) brightness(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1, 1) translate3d(0, 0, 0);
+    filter: contrast(1) brightness(1.2) saturate(1.3);
+    opacity: 1;
+  }
+}
+
+@keyframes crt-power-off {
+  0% {
+    transform: scale(1, 1.3) translate3d(0, 0, 0);
+    filter: brightness(1);
+    opacity: 1;
+  }
+  60% {
+    transform: scale(1.3, 0.001) translate3d(0, 0, 0);
+    filter: brightness(10);
+  }
+  100% {
+    transform: scale(0, 0.0001) translate3d(0, 0, 0);
+    filter: brightness(50);
+  }
+}
+
+/* ---------- TV controls ---------- */
+
+.switch {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+
+/* remote control, modelled on a universal TV remote */
+/* Moulded from the same plastic as the set, and clipped to the same bowed outline. */
+.remote {
+  position: relative;
+  grid-area: 1 / 1;
+  align-self: start;
+  isolation: isolate;
+  width: 150px;
+  margin-top: 62px;
+  padding: 26px 16px 72px;
+  color: #d8dce1;
+  font-family: Arial, 'Helvetica Neue', sans-serif;
+  font-weight: 700;
+}
+
+.remote::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -5px -6px;
+  clip-path: url(#setShape);
+  background: var(--plastic-grain),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.3) 0, rgba(0, 0, 0, 0) 16px, rgba(0, 0, 0, 0) calc(100% - 16px),
+      rgba(0, 0, 0, 0.3) 100%),
+    linear-gradient(180deg, #474c54 0%, #3f444b 42%, #2f343b 100%);
+  filter: drop-shadow(0 -1px 0 rgba(255, 255, 255, 0.18)) drop-shadow(0 12px 22px rgba(0, 0, 0, 0.8));
+}
+
+.remote-keys {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 50px 50px 80px 24px 50px;
+  justify-items: center;
+  align-items: end;
+}
+
+.key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #737981, #575c64);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.26), 0 0 0 1px #24282d, 0 2px 0 #23272c, 0 3px 5px rgba(0, 0, 0, 0.55);
+  color: inherit;
+  font: inherit;
+  line-height: 1;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
+  user-select: none;
+}
+
+button.key,
+label.key {
+  cursor: pointer;
+}
+
+.key:active {
+  transform: translateY(1px);
+  background: linear-gradient(180deg, #43484f, #383d44);
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.5), 0 0 0 1px #24282d;
+}
+
+.key:focus-visible {
+  outline: 2px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.key svg {
+  width: 56%;
+  height: 56%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* has the first row to itself, sitting over the left column */
+.key-power {
+  grid-column: span 2;
+  align-self: start;
+  justify-self: start;
+  margin-left: 10.5px; /* centres it in the left column: (59px - 38px) / 2 */
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: #e3342f;
+}
+
+.key-power svg {
+  stroke-width: 2.8;
+}
+
+.key-small {
+  width: 40px;
+  height: 34px;
+  font-size: 13px;
+}
+
+.key-guide {
+  font-size: 10.5px;
+}
+
+.key-small svg {
+  width: 72%;
+  height: 72%;
+  stroke-width: 2;
+}
+
+.key-big {
+  width: 52px;
+  height: 50px;
+  border-radius: 10px;
+  font-size: 32px;
+  font-weight: 400;
+}
+
+.remote-wedge {
+  align-self: center;
+  width: 30px;
+  height: 14px;
+  background: linear-gradient(90deg, #4e535b, #d8dce1);
+  clip-path: polygon(0 100%, 100% 100%, 100% 0);
+}
+
+.remote-ch {
+  align-self: center;
+  font-size: 16px;
+}
+
+/* transmitter light in the top-right corner; js/resume.js adds .sending while a key is held */
+.remote-led {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #3a3d42, #0d0d0d);
+  box-shadow: inset 0 0 2px #000, 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.remote-led.sending {
+  background: radial-gradient(circle at 35% 30%, #ffb2a6, #cc1206);
+  box-shadow: 0 0 4px 1px #ff2020, 0 0 12px 3px rgba(255, 30, 30, 0.55);
+  animation: led-flicker 0.12s steps(2, jump-none) infinite;
+}
+
+@keyframes led-flicker {
+  50% {
+    background: #c01818;
+    box-shadow: 0 0 3px 1px rgba(255, 30, 30, 0.6);
+  }
+}
+
+.remote-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 32px);
+  justify-content: space-between;
+  row-gap: 20px;
+  margin-top: 34px;
+  padding: 0 2px;
+}
+
+.remote-pad .key {
+  height: 27px;
+  border-radius: 7px;
+  font-size: 19px;
+}
+
+.remote-pad .key-tiny {
+  font-size: 7.5px;
+}
+
+/* ---------- first-visit hint ---------- */
+
+/* Sits over the (dark) screen, pointing left at the remote's power key. */
+.hint {
+  position: relative;
+  z-index: 20;
+  grid-area: 1 / 2;
+  align-self: start;
+  justify-self: start;
+  width: 300px;
+  margin: 76px 0 0 -30px;
+  padding: 16px 18px;
+  border: 2px solid #c3c3c3;
+  border-radius: 10px;
+  background: var(--navy);
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.6), 0 0 30px rgba(83, 129, 225, 0.45);
+  font-size: 17px;
+  line-height: 1.45;
+  text-shadow: 2px 2px 0 #000;
+  transition: opacity 0.4s, visibility 0.4s;
+}
+
+.hint::before {
+  content: '';
+  position: absolute;
+  top: 22px;
+  left: -12px;
+  width: 20px;
+  height: 20px;
+  border-bottom: 2px solid #c3c3c3;
+  border-left: 2px solid #c3c3c3;
+  background: var(--navy);
+  transform: rotate(45deg);
+}
+
+.hint p {
+  margin: 0;
+}
+
+.hint p + p {
+  margin-top: 8px;
+}
+
+.hint strong {
+  color: var(--yellow);
+  font-weight: normal;
+}
+
+.hint-phone {
+  display: none;
+}
+
+.tv.was-on .hint,
+#switch:checked ~ .hint {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* reopened with the remote's INFO key */
+.tv.hint-open #switch ~ .hint {
+  opacity: 1;
+  visibility: visible;
+  cursor: pointer;
+}
+
+#switch:checked ~ .hint .when-off,
+#switch:not(:checked) ~ .hint .when-on {
+  display: none;
+}
+
+/* js/resume.js adds no-remote when the remote wouldn't fit on the page */
+.tv.no-remote .remote,
+.tv.no-remote .hint .with-remote {
+  display: none;
+}
+
+.tv:not(.was-on) #switch:not(:checked) ~ .remote .key-power {
+  animation: power-pulse 1.6s ease-out infinite;
+}
+
+@keyframes power-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(227, 52, 47, 0.7);
+  }
+  100% {
+    box-shadow: 0 0 0 14px rgba(227, 52, 47, 0);
+  }
+}
+
+/* ---------- phones: narrower, taller screen ---------- */
+
+@media (max-width: 720px) {
+  :root {
+    --tv-w: 520;
+    --tv-fit-h: 0;
+  }
+
+  /* js/resume.js sets the height to whatever the window has room for */
+  .contents {
+    height: auto;
+    min-height: var(--phone-screen-h, 640px);
+  }
+
+  .page {
+    grid-template-rows: 32px 94px 1fr auto;
+  }
+
+  .logo {
+    top: 36px;
+    left: 24px;
+    width: 116px;
+    height: 84px;
+    border-width: 3px;
+    border-radius: 12px;
+    font-size: 20px;
+  }
+
+  .head {
+    padding-left: 158px;
+  }
+
+  .head::after {
+    width: 178px;
+    clip-path: polygon(62px 0, 100% 0, 100% 100%, 0 100%);
+  }
+
+  .title {
+    font-size: 25px;
+    line-height: 28px;
+    letter-spacing: -1.5px;
+  }
+
+  .clock {
+    top: 52px;
+    right: 24px;
+    font-size: 19px;
+    line-height: 21px;
+    letter-spacing: 0;
+  }
+
+  .infobox {
+    padding: 0 18px;
+  }
+
+  .box {
+    width: 100%;
+    padding: 26px 26px 30px;
+    box-shadow: inset 0 0 9px 12px var(--glow);
+  }
+
+  .foot {
+    height: auto;
+    min-height: 122px;
+    padding: 14px 30px 58px 36px; /* room below the text for the marquee */
+  }
+
+  .foot p {
+    font-size: 31px;
+    line-height: 35px;
+    white-space: normal;
+    width: calc(100% / var(--squish));
+  }
+
+  .lead {
+    margin-bottom: 12px !important;
+    font-size: 28px;
+    line-height: 30px;
+    letter-spacing: -1.5px;
+  }
+
+  .list {
+    font-size: 23px;
+    line-height: 27px;
+  }
+
+  .list li {
+    padding-left: 22px;
+  }
+
+
+  /* photo beside the name, the job title under that, then the contact rows across */
+  .conditions {
+    grid-template-columns: auto 1fr;
+    align-content: center; /* centred down a picture as tall as the window allows */
+    column-gap: 24px;
+    row-gap: 6px;
+  }
+
+  .conditions-left,
+  .conditions-right,
+  .conditions-right .sq {
+    display: contents; /* so the photo, name, title and rows all place on one grid */
+  }
+
+  .photo {
+    grid-area: 1 / 1 / span 2 / auto;
+    width: 150px;
+    height: 150px;
+  }
+
+  .lead {
+    grid-area: 1 / 2;
+    align-self: end;
+    margin-bottom: 0 !important;
+    font-size: 32px;
+    line-height: 34px;
+  }
+
+  .condition {
+    grid-area: 2 / 2;
+    align-self: start;
+    margin-top: 6px !important;
+    font-size: 25px;
+    line-height: 28px;
+    text-align: left;
+  }
+
+  .conditions dl {
+    grid-area: 3 / 1 / auto / -1;
+    margin-top: 34px;
+  }
+
+  /* label over value: the numbers and addresses are too long to sit beside their labels */
+  .conditions .row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding-top: 24px;
+    font-size: 26px;
+    line-height: 30px;
+  }
+
+  /* the experience bars spread down it too */
+  .box .sq {
+    height: 100%;
+  }
+
+  .bars {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 26px;
+    height: 100%;
+  }
+
+  .bars li + li {
+    margin-top: 0;
+  }
+
+  .conditions-left {
+    flex-direction: row;
+    gap: 20px;
+    padding-top: 0;
+  }
+
+  .photo {
+    width: 120px;
+    height: 120px;
+  }
+
+  .condition {
+    margin-top: 0 !important;
+    text-align: left;
+    font-size: 24px;
+    line-height: 28px;
+  }
+
+  .conditions-right {
+    margin-top: 22px;
+  }
+
+  .row {
+    padding-top: 12px;
+    font-size: 24px;
+    line-height: 30px;
+    letter-spacing: -1px;
+  }
+
+  .bar-label {
+    font-size: 23px;
+    line-height: 26px;
+  }
+
+  .osd {
+    top: 34px;
+    right: 26px;
+    font-size: 42px;
+    word-spacing: 8px;
+    text-shadow:
+      -1.5px -1.5px 0 #000, 0 -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 0 0 #000, 1.5px 0 0 #000, -1.5px 1.5px 0 #000, 0 1.5px 0 #000, 1.5px 1.5px 0 #000,
+      -3px 0 1px rgba(255, 40, 70, 0.75), 3px 0 1px rgba(40, 110, 255, 0.75),
+      0 0 10px rgba(93, 255, 124, 0.5);
+    filter: blur(0.9px);
+  }
+
+  .marquee {
+    bottom: 20px;
+    height: 32px;
+  }
+
+  .marquee-text {
+    font-size: 24px;
+    line-height: 32px;
+    text-shadow:
+      -1.5px -1.5px 0 #000, 0 -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 0 0 #000, 1.5px 0 0 #000, -1.5px 1.5px 0 #000, 0 1.5px 0 #000, 1.5px 1.5px 0 #000,
+      -2px 0 1px rgba(255, 40, 70, 0.75), 2px 0 1px rgba(40, 110, 255, 0.75),
+      0 0 8px rgba(93, 255, 124, 0.5);
+    filter: blur(0.6px);
+  }
+
+  .marquee.still .marquee-text {
+    padding-left: 30px;
+  }
+
+  /* guide: no preview window, taller rows for tapping */
+  .page.epg {
+    padding: 30px 24px 70px;
+  }
+
+  .epg-top {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .epg-preview {
+    display: none;
+  }
+
+  .epg-bar {
+    gap: 10px;
+    height: 36px;
+  }
+
+  .epg-time {
+    font-size: 20px;
+  }
+
+  .epg-mail svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .epg-info-title {
+    font-size: 24px;
+  }
+
+  .epg-info-desc {
+    min-height: 3.9em;
+    font-size: 19px;
+  }
+
+  .epg-times,
+  .epg-row {
+    grid-template-columns: 46px repeat(3, 1fr); /* just the channel number, so the titles get the room */
+  }
+
+  .epg-times {
+    margin-top: 12px;
+    font-size: 18px;
+  }
+
+  .epg-times span {
+    padding-left: 6px;
+  }
+
+  /* "Today" has only the channel number's column to sit in, which is no longer wide enough */
+  .epg-times span:first-child {
+    visibility: hidden;
+  }
+
+  /* the TV Guide badge and clock stay; the details panel goes on narrow screens (below) */
+  .epg-top {
+    margin-bottom: 4px;
+  }
+
+  /* no room for the call signs, and the programme names wrap instead of being cut off */
+  .epg-call {
+    display: none;
+  }
+
+  .epg-cell {
+    display: flex;
+    align-items: center;
+    padding: 3px 8px;
+    line-height: 1.2;
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  /* the listings share out whatever height the picture has */
+  .epg-grid {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+  }
+
+  .epg-row {
+    flex: 1;
+    height: auto;
+    min-height: 42px;
+  }
+
+  .epg-ch {
+    gap: 5px;
+    padding-left: 6px;
+    font-size: 15px;
+  }
+
+  .epg-ch b {
+    font-size: 20px;
+  }
+
+  .epg-cell {
+    padding: 0 7px;
+    font-size: 19px;
+  }
+
+  .epg-ad {
+    gap: 8px;
+    height: auto;
+    margin: 14px 0 0;
+    padding: 7px;
+    font-size: 17px;
+  }
+
+  .epg-ad-icon {
+    flex: none;
+  }
+
+  /* news: a smaller logo and lower third */
+  .news-logo {
+    top: 34%;
+    width: 300px;
+    padding: 13px 20px;
+  }
+
+  /* the LIVE badge drops clear of the top edge, and the banners lift off the bottom one */
+  .news-live {
+    top: 88px;
+    left: 26px;
+    font-size: 22px;
+  }
+
+  .news-lower {
+    right: 18px;
+    bottom: 108px;
+    left: 18px;
+  }
+
+  .news-flag {
+    padding: 6px 12px 5px;
+    font-size: 20px;
+  }
+
+  .news-tag {
+    padding: 4px 8px 3px;
+    font-size: 17px;
+  }
+
+  .news-headline {
+    padding: 8px 12px 9px;
+  }
+
+  .news-headline h2 {
+    font-size: 24px;
+  }
+
+  .news-headline p {
+    font-size: 19px;
+  }
+
+  .news-ticker {
+    height: 36px;
+  }
+
+  .news-time {
+    width: 58px;
+    font-size: 20px;
+  }
+
+  .news-ticker-text li {
+    padding-left: 12px;
+    font-size: 23px;
+    line-height: 36px;
+  }
+
+  .news-ticker-text li::after {
+    margin-left: 12px;
+  }
+
+  /* puzzle board: smaller tiles to fit 14 across */
+  .page.wof {
+    justify-content: center;
+    gap: 0;
+    padding: 46px 14px 74px;
+  }
+
+  /* the category sits right under the board; the rest keeps its distance */
+  .wof-category {
+    margin-top: 18px;
+  }
+
+  .wof-company {
+    margin-top: 54px;
+  }
+
+  .wof-ticker {
+    margin-top: 54px;
+  }
+
+  .page.wof::before {
+    height: 180px;
+  }
+
+  .page.wof::after {
+    top: 34px;
+    height: 150px;
+  }
+
+  /* the letter is sized from the tile's width here, which is the tighter of the two */
+  .wof-tile {
+    font-size: calc(var(--tw) * 0.82);
+  }
+
+  /* js/resume.js drops the spare blank columns here, which leaves room for tiles this size */
+  .wof-frame {
+    --tw: 50px;
+    --th: 64px;
+    --gap: 3px;
+    --pad: 4px;
+    padding: 6px;
+  }
+
+  /* callouts: "Tap" instead of "Click", smaller; the quiz one sits over the empty cells at the
+     right of the bottom row (the board runs sideways here) */
+  .say-click {
+    display: none;
+  }
+
+  .say-tap {
+    display: inline;
+  }
+
+  .play-hint {
+    padding: 5px 12px;
+    font-size: 19px;
+  }
+
+  .quiz-board .play-hint {
+    right: 6px;
+    bottom: 102px; /* centred on the last two rows */
+    width: 112px;
+    padding: 5px 8px;
+  }
+
+  .quiz-board .play-hint::before {
+    left: 26px;
+  }
+
+  .wof-inner {
+    padding: 5px;
+  }
+
+  .wof-category {
+    padding: 9px 34px 8px;
+    font-size: 25px;
+  }
+
+  .wof-company {
+    gap: 16px;
+    font-size: 26px;
+  }
+
+  .wof-company a {
+    padding-right: 14px;
+  }
+
+  .wof-company img {
+    width: 178px;
+  }
+
+  /* outlook: smaller bars and text, a narrower slant */
+  /* both banners pull in off the edges of the picture */
+  .page.outlook {
+    grid-template-rows: 98px minmax(260px, 1fr) auto;
+    padding: 56px 0 96px;
+  }
+
+  .outlook-title {
+    margin-left: 128px;
+    padding: 0 26px 0 30px;
+  }
+
+  .outlook-title::before {
+    top: 8px;
+    height: 14px;
+  }
+
+  .outlook-title::after {
+    top: 32px;
+    left: 12px;
+    height: 44px;
+    clip-path: polygon(20px 0, 100% 0, 100% 100%, 0 100%);
+  }
+
+  .outlook-kicker {
+    font-size: 23px;
+    text-shadow: 2px 2px 2px rgba(35, 25, 35, 0.8);
+  }
+
+  .outlook-big {
+    margin-top: 10px;
+    font-size: 32px;
+    letter-spacing: 2px;
+    text-shadow: -1px -1px 0 #f4f7ff, 2px 2px 0 #2c2f5c, 3px 3px 2px rgba(0, 0, 0, 0.45);
+  }
+
+  .outlook-photo {
+    margin-left: 30px;
+  }
+
+  .outlook-photo div {
+    background-position: 45% 30%;
+    clip-path: polygon(40px 0, 100% 0, 100% 100%, 0 100%);
+  }
+
+  .outlook-bar {
+    margin-left: 14px;
+    padding: 11px 30px 12px 34px;
+    clip-path: polygon(16px 0, 100% 0, 100% 100%, 0 100%);
+  }
+
+  .outlook-program {
+    font-size: 23px;
+  }
+
+  .outlook-focus {
+    font-size: 20px;
+  }
+
+  /* commercial: picture on top, the offer below it */
+  /* the whole advert spreads down the picture rather than bunching at the top */
+  .page.promo {
+    justify-content: space-evenly;
+    gap: 6px;
+    padding: 40px 24px 76px;
+  }
+
+  .promo-top {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(190px, 0.9fr) auto;
+    gap: 20px;
+    height: auto;
+  }
+
+  .promo-offer {
+    justify-content: space-evenly;
+    gap: 14px;
+  }
+
+  .promo-cards li {
+    width: 70px;
+  }
+
+  .promo-deal-big {
+    font-size: 60px;
+  }
+
+  .contents .page.promo .promo-url {
+    font-size: 24px;
+  }
+
+  .promo-job {
+    margin-top: 6px;
+    font-size: 31px;
+    text-shadow: -2px -2px 0 var(--ink), 2px -2px 0 var(--ink), -2px 2px 0 var(--ink), 2px 2px 0 var(--ink),
+      0 -2px 0 var(--ink), 0 2px 0 var(--ink), -2px 0 0 var(--ink), 2px 0 0 var(--ink), 4px 4px 0 #0a1233;
+  }
+
+  .promo-years {
+    font-size: 44px;
+  }
+
+  .promo-fine {
+    flex-direction: column;
+    gap: 2px;
+    width: auto;
+    margin-top: 6px;
+  }
+
+  /* about: the warning screen stacked, letters and seal on top, text full width below */
+  .page.warning {
+    padding: 30px 18px 72px;
+  }
+
+  /* the DEV block takes a third of the picture, and everything on this screen is sized from
+     the picture's height, which is whatever the window had to spare */
+  .warning-panel {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 0.42fr) minmax(0, 1fr);
+    padding: 10px;
+    border-radius: 20px;
+  }
+
+  .warning-side {
+    justify-content: center;
+    gap: 6%;
+    flex-direction: row;
+    padding: 2px 0 12px;
+  }
+
+  /* The margins reserve the height scaleY(2.7) adds, in step with the font size; the lower one
+     allows for the glyphs' ink, which a line-height of 0.8 lets spill past the box. */
+  .warning-letters {
+    margin: 0.72em 0 1.05em;
+    font-size: calc(var(--phone-screen-h, 640px) * 0.095);
+  }
+
+  .warning-seal {
+    width: calc(var(--phone-screen-h, 640px) * 0.155);
+    height: calc(var(--phone-screen-h, 640px) * 0.155);
+  }
+
+  .warning-box {
+    justify-content: flex-start;
+    padding: 18px 20px 22px;
+    border-radius: 4px 4px 13px 13px;
+  }
+
+  .warning-title {
+    margin-bottom: 14px;
+    font-size: calc(var(--phone-screen-h, 640px) * 0.05);
+  }
+
+  .warning-box p {
+    font-size: calc(var(--phone-screen-h, 640px) * 0.031);
+    line-height: 1.35;
+  }
+
+  .warning-box p + p {
+    margin-top: 0.9em;
+  }
+
+  /* quiz boards: categories run down the side, values across */
+  .page.quiz {
+    padding: 28px 18px 70px;
+  }
+
+  .quiz-round {
+    margin: 0 6px 10px;
+    font-size: 20px;
+    letter-spacing: 2px;
+  }
+
+  .quiz-stage {
+    grid-template-columns: 10px 1fr 10px;
+    gap: 6px;
+  }
+
+  .quiz-board {
+    grid-template-columns: repeat(var(--rows, 5), minmax(0, 1fr));
+    grid-template-rows: repeat(var(--cols, 6), auto minmax(44px, 1fr));
+    gap: 4px;
+    padding: 4px;
+    border-width: 4px;
+  }
+
+  /* each category heads its own row, with its five values on the row below it */
+  .quiz-cat {
+    grid-column: 1 / -1;
+    grid-row: calc(var(--c) * 2 - 1);
+    padding: 5px 4px;
+    font-size: 19px;
+  }
+
+  .quiz-cell {
+    grid-column: calc(var(--r) - 1);
+    grid-row: calc(var(--c) * 2);
+    padding: 3px;
+    font-size: 26px;
+    text-shadow: 2px 2px 0 #000;
+  }
+
+  .quiz-cell.played {
+    font-size: 15px;
+  }
+
+  .quiz-clue {
+    inset: 4px;
+    gap: 18px;
+    padding: 20px 22px;
+    font-size: 21px;
+  }
+
+  .quiz-response {
+    font-size: 26px;
+  }
+
+  /* a much slimmer bezel and panel, and no AV jacks: no room for them */
+  .tv-set {
+    padding: 10px 12px 0;
+  }
+
+  .tv-set::before {
+    inset: -5px -7px;
+  }
+
+  .tv-tube {
+    padding: 5px;
+    border-radius: 8px;
+  }
+
+  /* A tube that shallow can't carry the CRT's curved corners, so the picture and the recess
+     around it take the cabinet's outline instead: barely rounded, with the same slight bow. */
+  .screen,
+  .tv-tube::before {
+    clip-path: url(#setShape);
+  }
+
+  .glass .shape-crt {
+    display: none;
+  }
+
+  .glass .shape-flat {
+    display: block;
+  }
+
+  /* keys big enough to hit with a thumb, on a panel tall enough to hold them */
+  .tv-panel {
+    gap: 10px;
+    height: 76px;
+    padding: 0 12px;
+  }
+
+  .tv-panel::before,
+  .tv-panel::after {
+    height: 44px;
+    background-size: 7px 7px;
+  }
+
+  .tv-jacks {
+    display: none;
+  }
+
+  .tv-ir {
+    width: 13px;
+    height: 13px;
+  }
+
+  .tv-controls {
+    gap: 7px;
+  }
+
+  .tv-keys {
+    gap: 10px;
+  }
+
+  .tv-key {
+    width: 48px;
+    height: 30px;
+    border-radius: 5px;
+  }
+
+  .tv-key-labels {
+    grid-template-columns: 48px 106px 106px;
+    gap: 10px;
+    font-size: 12px;
+  }
+
+  /* with the remote gone there is room to spare, so the set sits in the middle of the window */
+  body {
+    display: flex;
+    flex-direction: column;
+    justify-content: safe center;
+    padding: 12px 16px 16px; /* fit() allows 40px for this */
+  }
+
+  /* the remote sits below the TV, enlarged so its keys are easy to tap */
+  .tv {
+    grid-template-columns: 520px;
+  }
+
+  .tv-set {
+    grid-area: 1 / 1;
+  }
+
+  .remote {
+    grid-area: 2 / 1;
+    justify-self: center;
+    margin-top: 40px;
+    zoom: 1.5;
+  }
+
+  /* the remote is far down the page or gone, so point down at the set's own power key:
+     js/resume.js puts --hint-arrow-x over the middle of it */
+  .hint {
+    grid-area: 1 / 1;
+    align-self: end;
+    justify-self: center;
+    width: 420px;
+    margin: 0 0 88px; /* clear of the set's front panel */
+    font-size: 19px;
+  }
+
+  .hint::before {
+    top: auto;
+    right: auto;
+    bottom: -12px;
+    left: calc(var(--hint-arrow-x, 50%) - 10px);
+    border: 0;
+    border-right: 2px solid #c3c3c3;
+    border-bottom: 2px solid #c3c3c3;
+  }
+
+  .hint-desktop {
+    display: none;
+  }
+
+  .hint-phone {
+    display: block;
+  }
+
+  .tv:not(.was-on) #switch:not(:checked) ~ .remote .key-power {
+    animation: none;
+  }
+
+  .tv-power {
+    position: relative;
+  }
+
+  .tv-power::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 2px;
+  }
+
+  .tv:not(.was-on) #switch:not(:checked) ~ .tv-set .tv-power::before {
+    animation: power-pulse 1.6s ease-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #switch:checked ~ .tv-set .screen > .contents {
+    animation: none;
+    filter: contrast(1) brightness(1.2) saturate(1.3);
+  }
+
+  #switch:checked ~ .tv-set .screen.scanlines::before,
+  #switch:checked ~ .tv-set .screen.scanlines::after,
+  .tv:not(.was-on) #switch:not(:checked) ~ .remote .key-power,
+  .tv:not(.was-on) #switch:not(:checked) ~ .tv-set .tv-power::before,
+  .remote-led.sending,
+  .wof-tile.shown,
+  .play-hint {
+    animation: none;
+  }
+
+  /* the news ticker stops scrolling and lists every item instead */
+  .news-ticker {
+    height: auto;
+  }
+
+  .news-ticker-track {
+    width: auto;
+    animation: none;
+  }
+
+  .news-ticker-text {
+    flex-direction: column;
+    padding: 6px 0;
+  }
+
+  .news-ticker-text[aria-hidden] {
+    display: none;
+  }
+
+  .news-ticker-text li {
+    padding: 3px 14px;
+    line-height: 1.25;
+    white-space: normal;
+  }
+
+  .news-ticker-text li::after {
+    content: none;
+  }
+}
+
+/* The callout never swallows a tap meant for the board behind it; a tap on the board is what
+   dismisses it anyway. */
+.play-hint {
+  pointer-events: none;
+}
+
+/* ---------- narrow phones ---------- */
+
+/* Too narrow for the guide's details panel: the listings themselves are what matters, so the
+   preview and the description go and the rows take the whole picture. */
+@media (max-width: 560px) {
+  .epg-info,
+  .epg-preview {
+    display: none;
+  }
+
+  .epg-top {
+    display: block;
+    height: auto;
+    margin-bottom: 0;
+  }
+}
