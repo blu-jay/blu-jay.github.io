@@ -36,10 +36,16 @@
 html,
 body {
   margin: 0;
+  /* no pull-to-refresh or overscroll glow: the page is a TV set, not a document */
+  overscroll-behavior: none;
 }
 
 body {
+  /* 100vh on a phone is the window with the browser's toolbars hidden, so centring in it leaves
+     a toolbar-sized gap above the set while they are showing. svh is the window as it actually
+     is, which is also the height the TV is sized to. */
   min-height: 100vh;
+  min-height: 100svh;
   padding: 20px 16px 48px;
   overflow-x: hidden;
   background: #000;
@@ -224,6 +230,8 @@ button.tv-key:focus-visible {
 
 .screen {
   position: relative;
+  /* a drag here is a channel swipe, so the browser mustn't take it as a scroll or a refresh */
+  touch-action: pinch-zoom;
   background: radial-gradient(ellipse at 28% 18%, #2a2a2a 0%, #111 45%, #070707 100%);
   clip-path: url(#crtPath);
 }
