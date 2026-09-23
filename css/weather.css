@@ -2016,9 +2016,9 @@ button.tv-key:focus-visible {
 }
 
 .scanlines::after {
-  inset: 0;
+  inset: 0 0 -0.4rem; /* one band of overhang, so sliding never uncovers the bottom edge */
   z-index: 10;
-  will-change: transform; /* own layer, so its per-frame repaint doesn't re-run #crt below */
+  will-change: transform; /* its own layer, above #crt, so the picture is not re-filtered */
 }
 
 #switch:checked ~ .tv-set .screen.scanlines::before {
@@ -2057,9 +2057,10 @@ button.tv-key:focus-visible {
   }
 }
 
+/* one band's worth of travel: the sheet repeats, so it looks like it never stops */
 @keyframes scan-crt {
-  0% {
-    background-position: 0 50%;
+  to {
+    transform: translate3d(0, 0.4rem, 0);
   }
 }
 
@@ -2386,6 +2387,14 @@ label.key {
   :root {
     --tv-w: 520;
     --tv-fit-h: 0;
+  }
+
+  /* No #crt on phones. It is a chain of eight filter primitives over a picture that is nearly
+     the whole screen, and anything moving inside it — a ticker, the power-on flash — makes the
+     lot re-render every frame, which phone GPUs are slow at. The curved outline, the glass
+     shading and the scanlines carry the tube's look without it. */
+  .contents > * {
+    filter: none;
   }
 
   /* js/resume.js sets the height to whatever the window has room for */

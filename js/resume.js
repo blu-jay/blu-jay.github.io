@@ -808,6 +808,10 @@
 
   // Shifts are in the picture's own (unzoomed) pixels, which is what Chrome's filter units are.
   function drawCurveMap() {
+    if (phoneLayout.matches) {
+      curveSize = ''; // no filter to feed there; draw it again if the layout comes back
+      return;
+    }
     const width = picture.offsetWidth;
     const height = picture.offsetHeight;
     if (!width || !height || curveSize === width + 'x' + height) return;
@@ -869,35 +873,89 @@
     const key = document.querySelector('.tv-power').getBoundingClientRect();
     const box = hint.getBoundingClientRect();
     if (!key.width || !box.width) return;
-    hint.style.setProperty('--hint-arrow-x', Math.round((key.left + key.width / 2 - box.left) / scale) + 'px');
+    const x = Math.round((key.left + key.width / 2 - box.left) / scale) + 'px';
+    if (x !== appliedArrow) {
+      appliedArrow = x;
+      hint.style.setProperty('--hint-arrow-x', x);
+    }
   }
 
-  function fitPhoneScreen(scale) {
-    const extras = (tvSet.getBoundingClientRect().height - picture.getBoundingClientRect().height) / scale;
-    const room = (window.innerHeight - 40) / scale; // 40: the body's top and bottom padding
-    const height = Math.min(PHONE_SCREEN_MAX, Math.max(PHONE_SCREEN_MIN, Math.round(room - extras)));
-    root.style.setProperty('--phone-screen-h', height + 'px');
+  // A phone browser's toolbars slide away as you scroll, which grows the window by a hundred
+  // pixels or so and fires resize the whole way down. Sizing the TV to that would have it
+  // breathing in and out under your thumb, so growth of about a toolbar's worth is ignored and
+  // the TV keeps the height it has. Less room than before is always honoured, and a change too
+  // large to be toolbars — turning the phone, or a window being dragged — starts again.
+  const TOOLBAR_PX = 200;
+  let sizedWidth = 0;
+  let sizedHeight = 0;
+
+  function windowHeight() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    if (width !== sizedWidth || height < sizedHeight || height - sizedHeight > TOOLBAR_PX) {
+      sizedWidth = width;
+      sizedHeight = height;
+    }
+    return sizedHeight;
   }
+
+  // Writing --s or --phone-screen-h invalidates the style of every element that reads them, so
+  // they are only written when the value actually changes.
+  let appliedScale = 0;
+  let appliedScreen = 0;
+  let appliedArrow = '';
+
+  function applyScale(scale) {
+    if (scale === appliedScale) return;
+    appliedScale = scale;
+    root.style.setProperty('--s', scale.toFixed(4));
+  }
+
+  function applyScreen(height) {
+    if (height === appliedScreen) return;
+    appliedScreen = height;
+    if (height) root.style.setProperty('--phone-screen-h', height + 'px');
+    else root.style.removeProperty('--phone-screen-h');
+  }
+
+  // How tall the picture can be at this scale, once the bezel and panel have taken their share.
+  function phoneScreen(scale, room) {
+    const extras = (tvSet.getBoundingClientRect().height - picture.getBoundingClientRect().height) / appliedScale;
+    const height = Math.round((room - 40) / scale - extras); // 40: the body's top and bottom padding
+    return Math.min(PHONE_SCREEN_MAX, Math.max(PHONE_SCREEN_MIN, height));
+  }
+
+  // Nothing to fit unless the window really changed shape; a resize that only slid the browser's
+  // own toolbars out of the way must not cost a measurement, let alone a relayout.
+  let lastRoom = 0;
+  let lastWidth = 0;
+  let lastPhone = null;
 
   function fit() {
+    const room = windowHeight();
+    const clientWidth = root.clientWidth;
+    if (room === lastRoom && clientWidth === lastWidth && phoneLayout.matches === lastPhone) return;
+    lastRoom = room;
+    lastWidth = clientWidth;
+    lastPhone = phoneLayout.matches;
     const style = getComputedStyle(root);
     const width = parseFloat(style.getPropertyValue('--tv-w'));
     const height = parseFloat(style.getPropertyValue('--tv-fit-h'));
-    let scale = Math.max(0.25, Math.min(1.25, (root.clientWidth - 32) / width));
-    if (height) scale = Math.max(0.25, Math.min(scale, (window.innerHeight - 76) / height)); // 76: the body's padding
+    let scale = Math.max(0.25, Math.min(1.25, (clientWidth - 32) / width));
+    if (height) scale = Math.max(0.25, Math.min(scale, (room - 76) / height)); // 76: the body's padding
     if (!phoneLayout.matches) {
-      root.style.removeProperty('--phone-screen-h');
-      root.style.setProperty('--s', scale.toFixed(4));
+      applyScreen(0);
+      applyScale(scale);
       fitRemote(scale);
       return;
     }
     // Sizing the picture changes how tall the set is, so the two settle together: a second pass
     // is enough, the first having taken the scale down to where the set does fit (landscape).
     for (let pass = 0; pass < 2; pass++) {
-      root.style.setProperty('--s', scale.toFixed(4));
-      fitPhoneScreen(scale);
+      applyScale(scale);
+      applyScreen(phoneScreen(scale, room));
       const design = tvSet.getBoundingClientRect().height / scale;
-      const fitted = Math.max(0.25, Math.min(scale, (window.innerHeight - 40) / design));
+      const fitted = Math.max(0.25, Math.min(scale, (room - 40) / design));
       if (fitted >= scale - 0.001) break;
       scale = fitted;
     }
@@ -905,7 +963,22 @@
     aimHint(scale);
   }
 
-  window.addEventListener('resize', fit);
+  // Resize fires many times through a toolbar slide or a rotation; one fit a frame is plenty.
+  let fitQueued = false;
+
+  function scheduleFit() {
+    if (fitQueued) return;
+    fitQueued = true;
+    requestAnimationFrame(() => {
+      fitQueued = false;
+      fit();
+    });
+  }
+
+  window.addEventListener('resize', scheduleFit);
+  window.addEventListener('orientationchange', scheduleFit);
+  // The resize event can miss the viewport settling just after load; the root box never does.
+  new ResizeObserver(scheduleFit).observe(root);
   fit();
   tick();
   show(hashIndex());
