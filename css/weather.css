@@ -1,7 +1,10 @@
 /*
-  Resume styled after the WeatherSTAR 4000 "Current Conditions" screen
+  Portfolio styled after the WeatherSTAR 4000 "Current Conditions" screen
   (see the WeatherChannel project). Sizes are design pixels for a 914 x 680
   screen (480 wide on phones); js/resume.js zooms the whole TV to fit.
+
+  The scanlines and the power on/off effect come from that project in turn, which
+  took them from https://codepen.io/njbair/pen/ZVPomJ
 */
 
 :root {
@@ -2000,7 +2003,8 @@ button.tv-key:focus-visible {
   stroke-width: 4px;
 }
 
-/* ---------- scanlines + power (from the WeatherChannel project) ---------- */
+/* ---------- scanlines + power ----------
+   From the WeatherChannel project, which credits https://codepen.io/njbair/pen/ZVPomJ */
 
 .scanlines {
   overflow: hidden;
